@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Brewfather Shopping List</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="popup-container">
+        <header class="popup-header">
+            <h1>🍺 Shopping List</h1>
+            <div class="header-actions">
+                <button id="refreshBtn" class="btn btn-icon" title="Refresh">🔄</button>
+                <button id="settingsBtn" class="btn btn-icon" title="Settings">⚙️</button>
+            </div>
+        </header>
+
+        <div id="loadingIndicator" class="loading">
+            <div class="spinner"></div>
+            <p>Loading shopping list...</p>
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="empty-icon">🛒</div>
+            <h3>No ingredients yet</h3>
+            <p>Visit a Brewfather recipe page and click "Add to Shopping List" to get started!</p>
+        </div>
+
+        <div id="errorState" class="error-state" style="display: none;">
+            <div class="error-icon">⚠️</div>
+            <h3>Error loading shopping list</h3>
+            <p id="errorMessage"></p>
+            <button id="retryBtn" class="btn btn-primary">Retry</button>
+        </div>
+
+        <div id="shoppingListContent" style="display: none;">
+            <div class="summary">
+                <span id="itemCount">0 items</span>
+                <div class="summary-actions">
+                    <button id="exportBtn" class="btn btn-secondary">📤 Export</button>
+                    <button id="clearBtn" class="btn btn-danger">🗑️ Clear All</button>
+                </div>
+            </div>
+
+            <div id="ingredientsList" class="ingredients-list">
+                <!-- Ingredients will be populated here -->
+            </div>
+        </div>
+
+        <!-- Export Modal -->
+        <div id="exportModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Export Shopping List</h3>
+                    <button id="closeExportModal" class="btn btn-icon">✕</button>
+                </div>
+                <div class="modal-body">
+                    <p>Choose export format:</p>
+                    <div class="export-options">
+                        <button id="exportTxt" class="btn btn-outline">📄 Text</button>
+                        <button id="exportCsv" class="btn btn-outline">📊 CSV</button>
+                        <button id="exportPdf" class="btn btn-outline">📕 PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration Alert -->
+        <div id="configAlert" class="config-alert" style="display: none;">
+            <div class="alert-content">
+                <h3>⚙️ Setup Required</h3>
+                <p>Please configure your Brewfather credentials to use this extension.</p>
+                <button id="openSettingsBtn" class="btn btn-primary">Open Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Brewfather Shopping List - Settings</title>
+    <link rel="stylesheet" href="options.css">
+</head>
+<body>
+    <div class="options-container">
+        <header class="options-header">
+            <h1>🍺 Brewfather Shopping List Settings</h1>
+            <p>Configure your Brewfather API credentials to use the extension</p>
+        </header>
+
+        <main class="options-content">
+            <div class="settings-section">
+                <h2>API Configuration</h2>
+                
+                <div class="form-group">
+                    <label for="userId">Brewfather User ID</label>
+                    <input 
+                        type="text" 
+                        id="userId" 
+                        placeholder="Enter your Brewfather User ID"
+                        autocomplete="username"
+                    >
+                    <small class="help-text">
+                        Find this in your Brewfather Settings → API section
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="apiKey">Brewfather API Key</label>
+                    <input 
+                        type="password" 
+                        id="apiKey" 
+                        placeholder="Enter your Brewfather API Key"
+                        autocomplete="current-password"
+                    >
+                    <small class="help-text">
+                        Generate this in your Brewfather Settings → API section. 
+                        Make sure it has "Read Recipes" scope enabled.
+                    </small>
+                </div>
+
+                <div class="form-actions">
+                    <button id="saveBtn" class="btn btn-primary">💾 Save Settings</button>
+                    <button id="testBtn" class="btn btn-secondary" disabled>🧪 Test Connection</button>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h2>📖 How to Get Your API Credentials</h2>
+                
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Login to Brewfather</h3>
+                        <p>Go to <a href="https://web.brewfather.app/" target="_blank">web.brewfather.app</a> and log into your account</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Open Settings</h3>
+                        <p>Click on your profile/settings in the top right corner</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Find API Section</h3>
+                        <p>Look for the "API" section in your settings</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Generate API Key</h3>
+                        <p>Click "GENERATE" to create a new API key. Make sure to select the <strong>"Read Recipes"</strong> scope.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h3>Copy Credentials</h3>
+                        <p>Copy both your User ID and the generated API Key into the form above</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-section">
+                <div id="statusMessage" class="status-message" style="display: none;"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="options.js"></script>
+</body>
+</html>
