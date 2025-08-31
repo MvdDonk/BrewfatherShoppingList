@@ -229,3 +229,17 @@ async function removeFromShoppingList(ingredientId) {
     await saveShoppingList(updatedList);
     return updatedList;
 }
+
+// Listen for tab updates to detect URL changes
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    // Only react to URL changes on Brewfather domain
+    if (changeInfo.url && tab.url && tab.url.includes('web.brewfather.app')) {
+        // Send message to content script about URL change
+        chrome.tabs.sendMessage(tabId, {
+            action: 'urlChanged',
+            url: changeInfo.url
+        }).catch(() => {
+            // Ignore errors if content script isn't ready
+        });
+    }
+});

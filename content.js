@@ -99,15 +99,20 @@
 
     // Wait for page to load and inject button
     function init() {
+        // Check if we're on a recipe page
+        if (!getRecipeId()) {
+            // Remove any existing button
+            const existingButton = document.getElementById('brewfather-shopping-list-btn');
+            if (existingButton) {
+                existingButton.remove();
+            }
+            return;
+        }
+
         // Remove any existing button
         const existingButton = document.getElementById('brewfather-shopping-list-btn');
         if (existingButton) {
             existingButton.remove();
-        }
-
-        // Check if we're on a recipe page
-        if (!getRecipeId()) {
-            return;
         }
 
         // Try to inject button, retry if page not ready
@@ -123,17 +128,11 @@
         init();
     }
 
-    // Re-inject button if URL changes (SPA navigation)
-    let currentUrl = window.location.href;
-    const observer = new MutationObserver(() => {
-        if (window.location.href !== currentUrl) {
-            currentUrl = window.location.href;
-            setTimeout(init, 500); // Small delay for SPA to update
+    // Listen for URL change messages from background script
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message.action === 'urlChanged') {
+            // Small delay to allow page to update after URL change
+            setTimeout(init, 500);
         }
-    });
-
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
     });
 })();

@@ -37,13 +37,12 @@ async function initializePopup() {
     if (!hasCredentials) {
         showConfigAlert();
             // Setup event listeners
-    setupEventListeners();
-        return;
     }
-    
-    // Load shopping list
-    await loadShoppingList();
-    
+    else {
+        // Load shopping list
+        await loadShoppingList();
+    }   
+     
     // Setup event listeners
     setupEventListeners();
 }
