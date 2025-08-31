@@ -330,12 +330,7 @@ function escapeHtml(text) {
 
 // Setup event listeners
 function setupEventListeners() {
-    // Close popup when clicking outside or losing focus
-    window.addEventListener('blur', () => {
-        window.close();
-    });
-    
-    // Close popup when pressing Escape key
+    // Only add Escape key as courtesy - browser handles auto-close natively
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
             window.close();
