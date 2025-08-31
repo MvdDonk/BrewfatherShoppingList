@@ -14,7 +14,7 @@
     function createShoppingListButton() {
         const button = document.createElement('button');
         button.id = 'brewfather-shopping-list-btn';
-        button.textContent = '🛒 Add to Shopping List';
+        button.textContent = '+';
         button.className = 'brewfather-shopping-btn';
         
         button.addEventListener('click', async () => {
@@ -69,8 +69,16 @@
         if (titleElement) {
             const button = createShoppingListButton();
             
-            // Append the button directly inside the ion-title to make it inline
-            titleElement.appendChild(button);
+            // Look for a span element inside ion-title to insert before it
+            const spanElement = titleElement.querySelector('span');
+            
+            if (spanElement) {
+                // Insert the button right before the span element
+                titleElement.insertBefore(button, spanElement);
+            } else {
+                // Fallback: append the button if no span found
+                titleElement.appendChild(button);
+            }
             
             return true;
         }
