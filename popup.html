@@ -43,14 +43,19 @@
 
         <!-- Shopping List View -->
         <div id="shoppingListView" style="display: none;">
-            <header class="popup-header">
-                <button id="backToMenuBtn" class="btn btn-icon" title="Back to Menu">←</button>
+            <header class="popup-header shopping-list-header">
                 <h1>🍺 Shopping List</h1>
-                <div class="header-actions">
-                    <button id="refreshBtn" class="btn btn-icon" title="Refresh">🔄</button>
-                    <button id="settingsBtn" class="btn btn-icon" title="Settings">⚙️</button>
-                </div>
+                <button id="popOutBtn" class="btn btn-icon" title="Pop out to new window">🔗</button>
             </header>
+            
+            <!-- Orange Top Row with Actions -->
+            <div class="shopping-list-actions">
+                <button id="backToMenuBtn" class="action-btn" title="Back to Menu">← Back</button>
+                <div class="action-group">
+                    <button id="refreshBtn" class="action-btn" title="Refresh">🔄</button>
+                    <button id="settingsBtn" class="action-btn" title="Settings">⚙️</button>
+                </div>
+            </div>
 
         <div id="loadingIndicator" class="loading">
             <div class="spinner"></div>

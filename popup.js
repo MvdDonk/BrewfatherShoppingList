@@ -31,6 +31,7 @@ const elements = {
     retryBtn: document.getElementById('retryBtn'),
     clearBtn: document.getElementById('clearBtn'),
     exportBtn: document.getElementById('exportBtn'),
+    popOutBtn: document.getElementById('popOutBtn'),
     closeExportModal: document.getElementById('closeExportModal'),
     openSettingsBtn: document.getElementById('openSettingsBtn'),
     exportTxt: document.getElementById('exportTxt'),
@@ -350,6 +351,11 @@ function setupEventListeners() {
         showMainMenu();
     });
     
+    // Pop out button
+    elements.popOutBtn.addEventListener('click', () => {
+        popOutToNewWindow();
+    });
+    
     // Refresh button
     elements.refreshBtn.addEventListener('click', loadShoppingList);
     
@@ -404,7 +410,195 @@ function setupEventListeners() {
     });
 }
 
-// Add current recipe to shopping list (from popup)
+// Pop out shopping list to new window
+async function popOutToNewWindow() {
+    try {
+        // Get current shopping list data
+        const response = await chrome.runtime.sendMessage({
+            action: 'getShoppingList'
+        });
+        
+        if (!response.success) {
+            alert('Failed to get shopping list data');
+            return;
+        }
+        
+        const ingredients = response.data;
+        
+        // Create HTML content for the new window
+        const htmlContent = generateStandaloneShoppingListHTML(ingredients);
+        
+        // Create a new window
+        const newWindow = window.open('', '_blank', 'width=600,height=800,scrollbars=yes,resizable=yes');
+        
+        if (newWindow) {
+            newWindow.document.write(htmlContent);
+            newWindow.document.close();
+            newWindow.focus();
+        } else {
+            alert('Pop-up blocked. Please allow pop-ups for this extension.');
+        }
+    } catch (error) {
+        console.error('Error creating pop-out window:', error);
+        alert('Failed to create new window');
+    }
+}
+
+// Generate standalone HTML for shopping list
+function generateStandaloneShoppingListHTML(ingredients) {
+    const grouped = groupIngredientsByType(ingredients);
+    
+    let ingredientsHTML = '';
+    Object.entries(grouped).forEach(([type, items]) => {
+        if (items.length > 0) {
+            ingredientsHTML += `
+                <div class="ingredient-group">
+                    <h3 class="group-title">${getTypeDisplayName(type)}</h3>
+                    <div class="group-items">
+            `;
+            
+            items.forEach(ingredient => {
+                const amount = formatAmount(ingredient.amount, ingredient.unit);
+                const details = getIngredientDetails(ingredient);
+                const recipes = getRecipeInfo(ingredient);
+                
+                ingredientsHTML += `
+                    <div class="ingredient-item">
+                        <div class="ingredient-info">
+                            <div class="ingredient-name">${escapeHtml(ingredient.name)}</div>
+                            ${details ? `<div class="ingredient-details">${escapeHtml(details)}</div>` : ''}
+                            <div class="ingredient-amount">${amount}</div>
+                            ${recipes ? `<div class="ingredient-recipes">${escapeHtml(recipes)}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            ingredientsHTML += `
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    if (!ingredientsHTML) {
+        ingredientsHTML = `
+            <div class="empty-message">
+                <h3>🛒 No ingredients yet</h3>
+                <p>Add some recipes to your shopping list to see them here!</p>
+            </div>
+        `;
+    }
+    
+    return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Brewfather Shopping List</title>
+            <style>
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    margin: 0;
+                    padding: 20px;
+                    background: #f8f9fa;
+                    line-height: 1.6;
+                }
+                .header {
+                    background: linear-gradient(135deg, #f39c12, #e67e22);
+                    color: white;
+                    padding: 20px;
+                    margin: -20px -20px 20px;
+                    text-align: center;
+                }
+                .header h1 {
+                    margin: 0;
+                    font-size: 24px;
+                }
+                .summary {
+                    background: white;
+                    padding: 15px 20px;
+                    margin-bottom: 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    text-align: center;
+                    font-weight: 600;
+                    color: #495057;
+                }
+                .ingredient-group {
+                    margin-bottom: 30px;
+                }
+                .group-title {
+                    background: #e9ecef;
+                    padding: 10px 15px;
+                    margin: 0 0 10px;
+                    border-radius: 6px;
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #495057;
+                }
+                .ingredient-item {
+                    background: white;
+                    padding: 15px 20px;
+                    margin-bottom: 8px;
+                    border-radius: 6px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                }
+                .ingredient-name {
+                    font-weight: 600;
+                    color: #343a40;
+                    margin-bottom: 4px;
+                }
+                .ingredient-details {
+                    font-size: 12px;
+                    color: #6c757d;
+                    margin-bottom: 4px;
+                }
+                .ingredient-amount {
+                    font-size: 14px;
+                    color: #495057;
+                    font-weight: 500;
+                }
+                .ingredient-recipes {
+                    font-size: 11px;
+                    color: #868e96;
+                    margin-top: 4px;
+                }
+                .empty-message {
+                    text-align: center;
+                    padding: 40px 20px;
+                    background: white;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+                .empty-message h3 {
+                    margin: 0 0 10px;
+                    color: #343a40;
+                }
+                .empty-message p {
+                    margin: 0;
+                    color: #6c757d;
+                }
+                @media print {
+                    body { background: white; }
+                    .header { background: #f39c12 !important; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🍺 Brewfather Shopping List</h1>
+                <p>Generated: ${new Date().toLocaleDateString()}</p>
+            </div>
+            <div class="summary">
+                ${ingredients.length} ingredient${ingredients.length !== 1 ? 's' : ''} total
+            </div>
+            <div class="shopping-list">
+                ${ingredientsHTML}
+            </div>
+        </body>
+        </html>
+    `;
+}
 async function addCurrentRecipeToShoppingList() {
     try {
         // Get current tab
