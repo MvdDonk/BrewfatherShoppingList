@@ -26,8 +26,6 @@ const elements = {
     backToMenuBtn: document.getElementById('backToMenuBtn'),
     
     // Action buttons
-    refreshBtn: document.getElementById('refreshBtn'),
-    settingsBtn: document.getElementById('settingsBtn'),
     retryBtn: document.getElementById('retryBtn'),
     clearBtn: document.getElementById('clearBtn'),
     exportBtn: document.getElementById('exportBtn'),
@@ -354,14 +352,6 @@ function setupEventListeners() {
     // Pop out button
     elements.popOutBtn.addEventListener('click', () => {
         popOutToNewWindow();
-    });
-    
-    // Refresh button
-    elements.refreshBtn.addEventListener('click', loadShoppingList);
-    
-    // Settings button
-    elements.settingsBtn.addEventListener('click', () => {
-        chrome.runtime.openOptionsPage();
     });
     
     // Retry button
