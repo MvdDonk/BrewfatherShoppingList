@@ -129,52 +129,6 @@ body {
     transform: translateY(-1px);
 }
 
-/* Orange Action Row */
-.shopping-list-actions {
-    background: linear-gradient(135deg, #f39c12, #e67e22);
-    padding: 8px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.action-group {
-    display: flex;
-    gap: 4px;
-}
-
-.action-btn {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 11px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    min-width: auto;
-}
-
-.action-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-1px);
-}
-
-.action-btn:active {
-    transform: translateY(0);
-}
-
-/* Compact back button */
-#backToMenuBtn {
-    font-size: 11px;
-    padding: 4px 8px;
-}
-
 /* Icon-only buttons for refresh and settings */
 #refreshBtn, #settingsBtn {
     padding: 6px;
