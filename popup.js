@@ -36,6 +36,8 @@ async function initializePopup() {
     
     if (!hasCredentials) {
         showConfigAlert();
+            // Setup event listeners
+    setupEventListeners();
         return;
     }
     

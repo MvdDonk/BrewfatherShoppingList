@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "type": "chrome",
+            "name": "https://web.brewfather.app/tabs/recipes/recipe/IXV8x0ukahr1Rh3qZrqdsDmjWOMHDj",
+            "request": "launch",
+            "url": "https://web.brewfather.app/tabs/recipes/recipe/IXV8x0ukahr1Rh3qZrqdsDmjWOMHDj",
+            "trace":true
+        }
+    ]
+}
