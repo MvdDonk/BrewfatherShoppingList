@@ -92,25 +92,39 @@ The user made manual edits to several files after initial implementation. Key ch
 **popup.js**:
 - Modified the initialization flow in `initializePopup()` function
 - Moved `setupEventListeners()` call to always execute, even when credentials missing
-- This ensures UI elements work properly in configuration alert state
+- **NEW**: Added main menu interface with three options
+- **NEW**: Added auto-navigation to shopping list after adding recipes
+- **NEW**: Added popup state management with local storage flags
 
 **content.js**:
 - Modified button injection selectors to include `'body'` as first option
-- This provides a fallback injection point when specific selectors aren't found
+- **UPDATED**: Now injects button inside `ion-title` element for inline positioning
+- **NEW**: Triggers shopping list display after successful recipe addition
 
 **content.css**:
-- Added `position: absolute` and `top: 5px` to button positioning
-- This ensures button appears in a fixed position on recipe pages
+- Added `position: absolute` and `top: 5px` to button positioning (later changed)
+- **UPDATED**: Changed to inline-block positioning to stick next to title text
+- **NEW**: Added relative positioning for ion-toolbar/ion-header containers
 
 **background.js**:
-- No significant modifications observed in the checked portions
+- **NEW**: Added tab event monitoring for URL changes
+- **NEW**: Added popup state management with storage flags
+- **NEW**: Added showShoppingList message handler
 
 ## 🔧 Implementation Details
 
 ### Recipe Page Detection
 - **URL Pattern**: `/tabs/recipes/recipe/[recipe-id]`
 - **Regex Used**: `/\/tabs\/recipes\/recipe\/([^\/]+)/`
-- **Button Injection**: Multiple selector fallbacks, now includes `body` as primary
+- **Button Injection**: Injects inside `ion-title` element for inline positioning
+
+### Extension Popup Interface
+- **Main Menu**: Three options when clicking extension icon:
+  1. **Add to Shopping List**: Adds current recipe (if on recipe page)
+  2. **Show Shopping List**: View and manage shopping list
+  3. **Settings**: Configure API credentials
+- **Auto-Navigation**: After adding recipe, automatically shows shopping list
+- **State Management**: Uses local storage flag to control popup behavior
 
 ### API Error Handling
 Comprehensive error handling for:

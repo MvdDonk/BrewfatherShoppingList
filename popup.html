@@ -8,13 +8,49 @@
 </head>
 <body>
     <div class="popup-container">
-        <header class="popup-header">
-            <h1>🍺 Shopping List</h1>
-            <div class="header-actions">
-                <button id="refreshBtn" class="btn btn-icon" title="Refresh">🔄</button>
-                <button id="settingsBtn" class="btn btn-icon" title="Settings">⚙️</button>
+        <!-- Main Menu View -->
+        <div id="mainMenu" class="main-menu">
+            <header class="popup-header">
+                <h1>🍺 Brewfather Shopping List</h1>
+            </header>
+            
+            <div class="menu-content">
+                <div class="menu-item" id="addToListBtn">
+                    <div class="menu-icon">🛒</div>
+                    <div class="menu-text">
+                        <h3>Add to Shopping List</h3>
+                        <p>Add current recipe to your shopping list</p>
+                    </div>
+                </div>
+                
+                <div class="menu-item" id="showShoppingListBtn">
+                    <div class="menu-icon">📋</div>
+                    <div class="menu-text">
+                        <h3>Show Shopping List</h3>
+                        <p>View and manage your shopping list</p>
+                    </div>
+                </div>
+                
+                <div class="menu-item" id="settingsMenuBtn">
+                    <div class="menu-icon">⚙️</div>
+                    <div class="menu-text">
+                        <h3>Settings</h3>
+                        <p>Configure Brewfather credentials</p>
+                    </div>
+                </div>
             </div>
-        </header>
+        </div>
+
+        <!-- Shopping List View -->
+        <div id="shoppingListView" style="display: none;">
+            <header class="popup-header">
+                <button id="backToMenuBtn" class="btn btn-icon" title="Back to Menu">←</button>
+                <h1>🍺 Shopping List</h1>
+                <div class="header-actions">
+                    <button id="refreshBtn" class="btn btn-icon" title="Refresh">🔄</button>
+                    <button id="settingsBtn" class="btn btn-icon" title="Settings">⚙️</button>
+                </div>
+            </header>
 
         <div id="loadingIndicator" class="loading">
             <div class="spinner"></div>

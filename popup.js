@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // DOM elements
 const elements = {
+    // Views
+    mainMenu: document.getElementById('mainMenu'),
+    shoppingListView: document.getElementById('shoppingListView'),
     loading: document.getElementById('loadingIndicator'),
     emptyState: document.getElementById('emptyState'),
     errorState: document.getElementById('errorState'),
@@ -16,7 +19,13 @@ const elements = {
     ingredientsList: document.getElementById('ingredientsList'),
     exportModal: document.getElementById('exportModal'),
     
-    // Buttons
+    // Menu buttons
+    addToListBtn: document.getElementById('addToListBtn'),
+    showShoppingListBtn: document.getElementById('showShoppingListBtn'),
+    settingsMenuBtn: document.getElementById('settingsMenuBtn'),
+    backToMenuBtn: document.getElementById('backToMenuBtn'),
+    
+    // Action buttons
     refreshBtn: document.getElementById('refreshBtn'),
     settingsBtn: document.getElementById('settingsBtn'),
     retryBtn: document.getElementById('retryBtn'),
@@ -36,13 +45,22 @@ async function initializePopup() {
     
     if (!hasCredentials) {
         showConfigAlert();
-            // Setup event listeners
+        // Setup event listeners
+        setupEventListeners();
+        return;
     }
-    else {
-        // Load shopping list
-        await loadShoppingList();
-    }   
-     
+    
+    // Check if we should show shopping list directly (after adding an item)
+    const result = await chrome.storage.local.get(['showShoppingListOnOpen']);
+    if (result.showShoppingListOnOpen) {
+        // Clear the flag and show shopping list
+        await chrome.storage.local.remove(['showShoppingListOnOpen']);
+        showShoppingListView();
+    } else {
+        // Show main menu initially
+        showMainMenu();
+    }
+    
     // Setup event listeners
     setupEventListeners();
 }
@@ -60,17 +78,52 @@ async function checkCredentials() {
 
 // Show configuration alert
 function showConfigAlert() {
-    hideAllStates();
+    hideAllViews();
     elements.configAlert.style.display = 'flex';
 }
 
-// Hide all state displays
+// Show main menu
+function showMainMenu() {
+    hideAllViews();
+    elements.mainMenu.style.display = 'flex';
+    updateMenuButtonStates();
+}
+
+// Show shopping list view
+function showShoppingListView() {
+    hideAllViews();
+    elements.shoppingListView.style.display = 'flex';
+    loadShoppingList();
+}
+
+// Hide all views
+function hideAllViews() {
+    elements.mainMenu.style.display = 'none';
+    elements.shoppingListView.style.display = 'none';
+    elements.configAlert.style.display = 'none';
+}
+
+// Update menu button states based on current context
+async function updateMenuButtonStates() {
+    // Check if we're on a recipe page
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const isOnRecipePage = tab?.url && tab.url.includes('web.brewfather.app/tabs/recipes/recipe/');
+    
+    // Enable/disable "Add to Shopping List" button
+    if (isOnRecipePage) {
+        elements.addToListBtn.classList.remove('disabled');
+    } else {
+        elements.addToListBtn.classList.add('disabled');
+        elements.addToListBtn.querySelector('.menu-text p').textContent = 'Navigate to a recipe page first';
+    }
+}
+
+// Hide all state displays (for shopping list view)
 function hideAllStates() {
     elements.loading.style.display = 'none';
     elements.emptyState.style.display = 'none';
     elements.errorState.style.display = 'none';
     elements.content.style.display = 'none';
-    elements.configAlert.style.display = 'none';
 }
 
 // Load shopping list
@@ -278,6 +331,25 @@ function escapeHtml(text) {
 
 // Setup event listeners
 function setupEventListeners() {
+    // Menu navigation
+    elements.addToListBtn.addEventListener('click', async () => {
+        if (!elements.addToListBtn.classList.contains('disabled')) {
+            await addCurrentRecipeToShoppingList();
+        }
+    });
+    
+    elements.showShoppingListBtn.addEventListener('click', () => {
+        showShoppingListView();
+    });
+    
+    elements.settingsMenuBtn.addEventListener('click', () => {
+        chrome.runtime.openOptionsPage();
+    });
+    
+    elements.backToMenuBtn.addEventListener('click', () => {
+        showMainMenu();
+    });
+    
     // Refresh button
     elements.refreshBtn.addEventListener('click', loadShoppingList);
     
@@ -332,7 +404,60 @@ function setupEventListeners() {
     });
 }
 
-// Clear shopping list
+// Add current recipe to shopping list (from popup)
+async function addCurrentRecipeToShoppingList() {
+    try {
+        // Get current tab
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        
+        if (!tab?.url || !tab.url.includes('web.brewfather.app/tabs/recipes/recipe/')) {
+            alert('Please navigate to a Brewfather recipe page first');
+            return;
+        }
+        
+        // Extract recipe ID from URL
+        const urlPattern = /\/tabs\/recipes\/recipe\/([^\/]+)/;
+        const match = tab.url.match(urlPattern);
+        
+        if (!match) {
+            alert('Could not detect recipe ID from current page');
+            return;
+        }
+        
+        const recipeId = match[1];
+        
+        // Show loading state in menu
+        const originalText = elements.addToListBtn.querySelector('.menu-text h3').textContent;
+        elements.addToListBtn.querySelector('.menu-text h3').textContent = 'Adding to list...';
+        elements.addToListBtn.classList.add('disabled');
+        
+        try {
+            // Send message to background script to fetch recipe
+            const response = await chrome.runtime.sendMessage({
+                action: 'addRecipeToShoppingList',
+                recipeId: recipeId
+            });
+            
+            if (response.success) {
+                // Show success and then navigate to shopping list
+                elements.addToListBtn.querySelector('.menu-text h3').textContent = '✅ Added!';
+                setTimeout(() => {
+                    showShoppingListView();
+                }, 1000);
+            } else {
+                throw new Error(response.error || 'Failed to add recipe');
+            }
+        } catch (error) {
+            console.error('Error adding recipe to shopping list:', error);
+            alert('Error: ' + error.message);
+            elements.addToListBtn.querySelector('.menu-text h3').textContent = originalText;
+            elements.addToListBtn.classList.remove('disabled');
+        }
+    } catch (error) {
+        console.error('Error getting current tab:', error);
+        alert('Could not access current tab');
+    }
+}
 async function clearShoppingList() {
     try {
         const response = await chrome.runtime.sendMessage({

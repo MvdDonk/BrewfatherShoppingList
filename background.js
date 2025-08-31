@@ -180,6 +180,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true; // Keep message channel open for async response
     }
     
+    if (message.action === 'showShoppingList') {
+        // Open the extension popup programmatically
+        chrome.action.openPopup().catch(() => {
+            // If popup fails to open, we can't do much
+            console.log('Could not open popup automatically');
+        });
+        sendResponse({ success: true });
+        return true;
+    }
+    
     if (message.action === 'getShoppingList') {
         getShoppingList()
             .then(list => sendResponse({ success: true, data: list }))
@@ -208,6 +218,9 @@ async function handleAddRecipeToShoppingList(recipeId) {
         const recipe = await fetchRecipe(recipeId);
         const ingredients = extractIngredients(recipe);
         const updatedList = await addToShoppingList(ingredients);
+        
+        // Set flag to show shopping list when popup opens
+        await chrome.storage.local.set({ showShoppingListOnOpen: true });
         
         return {
             success: true,

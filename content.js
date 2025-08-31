@@ -41,6 +41,11 @@
                     setTimeout(() => {
                         button.textContent = originalText;
                         button.disabled = false;
+                        
+                        // Show shopping list popup
+                        chrome.runtime.sendMessage({
+                            action: 'showShoppingList'
+                        });
                     }, 2000);
                 } else {
                     throw new Error(response.error || 'Failed to add recipe');
