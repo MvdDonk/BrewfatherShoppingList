@@ -49,35 +49,36 @@
                 <button id="popOutBtn" class="btn btn-icon" title="Pop out to new window">↗️</button>
             </header>
 
-        <div id="loadingIndicator" class="loading">
-            <div class="spinner"></div>
-            <p>Loading shopping list...</p>
-        </div>
-
-        <div id="emptyState" class="empty-state" style="display: none;">
-            <div class="empty-icon">🛒</div>
-            <h3>No ingredients yet</h3>
-            <p>Visit a Brewfather recipe page and click "Add to Shopping List" to get started!</p>
-        </div>
-
-        <div id="errorState" class="error-state" style="display: none;">
-            <div class="error-icon">⚠️</div>
-            <h3>Error loading shopping list</h3>
-            <p id="errorMessage"></p>
-            <button id="retryBtn" class="btn btn-primary">Retry</button>
-        </div>
-
-        <div id="shoppingListContent" style="display: none;">
-            <div class="summary">
-                <span id="itemCount">0 items</span>
-                <div class="summary-actions">
-                    <button id="exportBtn" class="btn btn-secondary">📤 Export</button>
-                    <button id="clearBtn" class="btn btn-danger">🗑️ Clear All</button>
-                </div>
+            <div id="loadingIndicator" class="loading">
+                <div class="spinner"></div>
+                <p>Loading shopping list...</p>
             </div>
 
-            <div id="ingredientsList" class="ingredients-list">
-                <!-- Ingredients will be populated here -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">🛒</div>
+                <h3>No ingredients yet</h3>
+                <p>Visit a Brewfather recipe page and click "Add to Shopping List" to get started!</p>
+            </div>
+
+            <div id="errorState" class="error-state" style="display: none;">
+                <div class="error-icon">⚠️</div>
+                <h3>Error loading shopping list</h3>
+                <p id="errorMessage"></p>
+                <button id="retryBtn" class="btn btn-primary">Retry</button>
+            </div>
+
+            <div id="shoppingListContent" style="display: none;">
+                <div class="summary">
+                    <span id="itemCount">0 items</span>
+                    <div class="summary-actions">
+                        <button id="exportBtn" class="btn btn-secondary">📤 Export</button>
+                        <button id="clearBtn" class="btn btn-danger">🗑️ Clear All</button>
+                    </div>
+                </div>
+
+                <div id="ingredientsList" class="ingredients-list">
+                    <!-- Ingredients will be populated here -->
+                </div>
             </div>
         </div>
 
