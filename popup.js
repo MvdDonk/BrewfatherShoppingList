@@ -330,6 +330,18 @@ function escapeHtml(text) {
 
 // Setup event listeners
 function setupEventListeners() {
+    // Close popup when clicking outside or losing focus
+    window.addEventListener('blur', () => {
+        window.close();
+    });
+    
+    // Close popup when pressing Escape key
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            window.close();
+        }
+    });
+    
     // Menu navigation
     elements.addToListBtn.addEventListener('click', async () => {
         if (!elements.addToListBtn.classList.contains('disabled')) {
