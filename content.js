@@ -58,9 +58,20 @@
 
     // Find a good place to inject the button
     function injectButton() {
-        // Look for recipe header or title area
-        const selectors = [
-            'body',
+        // Look for the ion-title element specifically
+        const titleElement = document.querySelector('ion-title');
+        
+        if (titleElement) {
+            const button = createShoppingListButton();
+            
+            // Append the button directly inside the ion-title to make it inline
+            titleElement.appendChild(button);
+            
+            return true;
+        }
+        
+        // Fallback to other selectors if ion-title not found
+        const fallbackSelectors = [
             '.recipe-header',
             '.recipe-title',
             '[data-cy="recipe-header"]',
@@ -70,7 +81,7 @@
         ];
 
         let targetElement = null;
-        for (const selector of selectors) {
+        for (const selector of fallbackSelectors) {
             targetElement = document.querySelector(selector);
             if (targetElement) break;
         }
