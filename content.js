@@ -69,16 +69,8 @@
         if (titleElement) {
             const button = createShoppingListButton();
             
-            // Look for a span element inside ion-title to insert before it
-            const spanElement = titleElement.querySelector('span');
-            
-            if (spanElement) {
-                // Insert the button right before the span element
-                titleElement.insertBefore(button, spanElement);
-            } else {
-                // Fallback: append the button if no span found
-                titleElement.appendChild(button);
-            }
+            // Insert the button as the first child of ion-title
+            titleElement.insertBefore(button, titleElement.firstChild);
             
             return true;
         }
