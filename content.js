@@ -14,7 +14,7 @@
     function createShoppingListButton() {
         const button = document.createElement('button');
         button.id = 'brewfather-shopping-list-btn';
-        button.textContent = '➕';
+        button.innerHTML = '&#43;'; // HTML entity for plus sign
         button.className = 'brewfather-shopping-btn';
         
         button.addEventListener('click', async () => {
