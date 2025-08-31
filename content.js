@@ -99,15 +99,15 @@
 
     // Wait for page to load and inject button
     function init() {
-        // Check if we're on a recipe page
-        if (!getRecipeId()) {
-            return;
-        }
-
         // Remove any existing button
         const existingButton = document.getElementById('brewfather-shopping-list-btn');
         if (existingButton) {
             existingButton.remove();
+        }
+
+        // Check if we're on a recipe page
+        if (!getRecipeId()) {
+            return;
         }
 
         // Try to inject button, retry if page not ready
