@@ -510,9 +510,49 @@ function generateStandaloneShoppingListHTML(ingredients) {
                     margin-bottom: 20px;
                     border-radius: 8px;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    text-align: center;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
                     font-weight: 600;
                     color: #495057;
+                }
+                .summary-count {
+                    font-size: 16px;
+                }
+                .summary-actions {
+                    display: flex;
+                    gap: 10px;
+                }
+                .btn {
+                    background: #6c757d;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 8px 12px;
+                    font-size: 12px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    text-decoration: none;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+                .btn:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+                }
+                .btn-secondary {
+                    background: #6c757d;
+                }
+                .btn-secondary:hover {
+                    background: #5a6268;
+                }
+                .btn-danger {
+                    background: #dc3545;
+                }
+                .btn-danger:hover {
+                    background: #c82333;
                 }
                 .ingredient-group {
                     margin-bottom: 30px;
@@ -580,11 +620,133 @@ function generateStandaloneShoppingListHTML(ingredients) {
                 <p>Generated: ${new Date().toLocaleDateString()}</p>
             </div>
             <div class="summary">
-                ${ingredients.length} ingredient${ingredients.length !== 1 ? 's' : ''} total
+                <span class="summary-count">${ingredients.length} ingredient${ingredients.length !== 1 ? 's' : ''} total</span>
+                <div class="summary-actions">
+                    <button class="btn btn-secondary" onclick="exportShoppingList()">📤 Export</button>
+                    <button class="btn btn-danger" onclick="clearShoppingList()">🗑️ Clear All</button>
+                </div>
             </div>
             <div class="shopping-list">
                 ${ingredientsHTML}
             </div>
+            
+            <script>
+                function exportShoppingList() {
+                    // Show export options
+                    const format = prompt('Choose export format:\\n1. Text (.txt)\\n2. CSV (.csv)\\n3. PDF (print to PDF)\\n\\nEnter 1, 2, or 3:');
+                    
+                    if (format === '1') {
+                        exportAsText();
+                    } else if (format === '2') {
+                        exportAsCSV();
+                    } else if (format === '3') {
+                        window.print();
+                    }
+                }
+                
+                function exportAsText() {
+                    const ingredients = ${JSON.stringify(ingredients)};
+                    let content = 'Brewfather Shopping List\\n';
+                    content += '======================\\n\\n';
+                    content += 'Generated: ' + new Date().toLocaleDateString() + '\\n\\n';
+                    
+                    const grouped = groupIngredientsByType(ingredients);
+                    Object.entries(grouped).forEach(([type, items]) => {
+                        if (items.length > 0) {
+                            content += getTypeDisplayName(type) + ':\\n';
+                            content += '-'.repeat(getTypeDisplayName(type).length + 1) + '\\n';
+                            items.forEach(ingredient => {
+                                const amount = formatAmount(ingredient.amount, ingredient.unit);
+                                content += '• ' + ingredient.name + ' - ' + amount + '\\n';
+                            });
+                            content += '\\n';
+                        }
+                    });
+                    
+                    downloadFile(content, 'brewfather-shopping-list.txt', 'text/plain');
+                }
+                
+                function exportAsCSV() {
+                    const ingredients = ${JSON.stringify(ingredients)};
+                    let content = 'Type,Name,Amount,Unit,Details\\n';
+                    
+                    ingredients.forEach(ingredient => {
+                        const type = getTypeDisplayName(ingredient.type);
+                        const name = escapeCSV(ingredient.name);
+                        const amount = ingredient.amount || '';
+                        const unit = ingredient.unit || '';
+                        const details = escapeCSV(getIngredientDetails(ingredient) || '');
+                        content += type + ',' + name + ',' + amount + ',' + unit + ',' + details + '\\n';
+                    });
+                    
+                    downloadFile(content, 'brewfather-shopping-list.csv', 'text/csv');
+                }
+                
+                function clearShoppingList() {
+                    if (confirm('Are you sure you want to clear all items from your shopping list? This action cannot be undone.')) {
+                        // In standalone window, we can't directly clear the extension's storage
+                        alert('To clear the shopping list, please use the extension popup or refresh this page after clearing from the extension.');
+                    }
+                }
+                
+                function downloadFile(content, filename, mimeType) {
+                    const blob = new Blob([content], { type: mimeType });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }
+                
+                function escapeCSV(str) {
+                    if (!str) return '';
+                    if (str.includes(',') || str.includes('"') || str.includes('\\n')) {
+                        return '"' + str.replace(/"/g, '""') + '"';
+                    }
+                    return str;
+                }
+                
+                function groupIngredientsByType(ingredients) {
+                    const grouped = {};
+                    ingredients.forEach(ingredient => {
+                        const type = ingredient.type || 'other';
+                        if (!grouped[type]) grouped[type] = [];
+                        grouped[type].push(ingredient);
+                    });
+                    return grouped;
+                }
+                
+                function getTypeDisplayName(type) {
+                    const typeMap = {
+                        'fermentables': 'Fermentables',
+                        'hops': 'Hops',
+                        'yeasts': 'Yeasts',
+                        'water': 'Water Agents',
+                        'miscs': 'Miscellaneous',
+                        'other': 'Other'
+                    };
+                    return typeMap[type] || 'Other';
+                }
+                
+                function formatAmount(amount, unit) {
+                    if (!amount && !unit) return '';
+                    if (!amount) return unit;
+                    if (!unit) return amount.toString();
+                    return amount + ' ' + unit;
+                }
+                
+                function getIngredientDetails(ingredient) {
+                    const details = [];
+                    if (ingredient.color) details.push(ingredient.color + ' EBC');
+                    if (ingredient.alpha) details.push(ingredient.alpha + '% α');
+                    if (ingredient.attenuation) details.push(ingredient.attenuation + '% att.');
+                    if (ingredient.temp) details.push(ingredient.temp + '°C');
+                    return details.join(', ');
+                }
+            </script>
         </body>
         </html>
     `;
