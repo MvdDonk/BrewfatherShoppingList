@@ -60,6 +60,7 @@
     function injectButton() {
         // Look for recipe header or title area
         const selectors = [
+            'body',
             '.recipe-header',
             '.recipe-title',
             '[data-cy="recipe-header"]',
