@@ -67,6 +67,7 @@ function extractIngredients(recipe) {
                 type: 'fermentable',
                 origin: fermentable.origin,
                 supplier: fermentable.supplier,
+                color: fermentable.color,
                 recipeId: recipe._id,
                 recipeName: recipe.name
             });

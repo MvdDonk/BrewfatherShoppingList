@@ -294,6 +294,10 @@ function getIngredientDetails(ingredient) {
         details.push(`${ingredient.alpha}% AA`);
     }
     
+    if (ingredient.color && ingredient.type === 'fermentable') {
+        details.push(`${ingredient.color} EBC`);
+    }
+    
     if (ingredient.hopType) {
         details.push(ingredient.hopType);
     }
@@ -312,10 +316,11 @@ function getIngredientDetails(ingredient) {
 // Get recipe info string
 function getRecipeInfo(ingredient) {
     if (ingredient.recipeNames && ingredient.recipeNames.length > 0) {
-        const recipeText = ingredient.recipeNames.length === 1 
-            ? ingredient.recipeNames[0]
-            : `${ingredient.recipeNames.length} recipes`;
-        return `From: ${recipeText}`;
+        if (ingredient.recipeNames.length === 1) {
+            return `From: ${ingredient.recipeNames[0]}`;
+        } else {
+            return `From: ${ingredient.recipeNames.join(', ')}`;
+        }
     }
     return '';
 }
