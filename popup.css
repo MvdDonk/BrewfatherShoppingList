@@ -632,6 +632,60 @@ body {
     opacity: 0.6;
 }
 
+/* Standalone window responsive styles */
+body[data-context="standalone"] {
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+body[data-context="standalone"] .popup-container {
+    width: 100%;
+    min-height: 100vh;
+}
+
+body[data-context="standalone"] .popup-header {
+    width: 100%;
+}
+
+body[data-context="standalone"] .menu-content,
+body[data-context="standalone"] #shoppingListContent,
+body[data-context="standalone"] #substitutionsContent {
+    width: 100%;
+    padding-left: 20px;
+    padding-right: 20px;
+    box-sizing: border-box;
+}
+
+body[data-context="standalone"] .summary {
+    margin-left: 20px;
+    margin-right: 20px;
+    width: calc(100% - 40px);
+}
+
+body[data-context="standalone"] .ingredients-list,
+body[data-context="standalone"] .substitutions-list {
+    padding-left: 20px;
+    padding-right: 20px;
+    box-sizing: border-box;
+}
+
+/* Style disabled add button in standalone mode */
+body[data-context="standalone"] .menu-item.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+body[data-context="standalone"] .menu-item.disabled .menu-text h3 {
+    color: var(--text-secondary);
+}
+
+body[data-context="standalone"] .menu-item.disabled .menu-text p {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
 .substitution-actions {
     margin-top: 12px;
     display: flex;

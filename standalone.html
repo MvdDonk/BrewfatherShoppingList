@@ -8,14 +8,41 @@
     <style>
         /* Standalone window specific styles */
         body {
+            width: 100%;
             min-width: 600px;
             min-height: 400px;
             max-width: none;
             max-height: none;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
         }
         
         .popup-container {
             min-height: 100vh;
+            width: 100%;
+            max-width: none;
+        }
+        
+        /* Ensure headers span full width */
+        .popup-header {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Ensure all content uses full width */
+        .main-menu,
+        #shoppingListView,
+        #substitutionsView {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .menu-content,
+        #shoppingListContent,
+        #substitutionsContent {
+            width: 100%;
+            box-sizing: border-box;
         }
         
         /* Hide pop-out button in standalone mode */
@@ -35,27 +62,9 @@
         .substitutions-list {
             max-height: none;
         }
-        
-        /* Window controls for standalone */
-        .standalone-controls {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            z-index: 101;
-        }
-        
-        .standalone-controls .btn {
-            min-width: auto;
-            padding: 8px 12px;
-            font-size: 12px;
-        }
     </style>
 </head>
 <body data-context="standalone">
-    <div class="standalone-controls">
-        <button id="closeBtn" class="btn btn-secondary" title="Close">✕</button>
-    </div>
-    
     <div class="popup-container">
         <!-- Main Menu View -->
         <div id="mainMenu" class="main-menu">
@@ -211,11 +220,6 @@
     <script>
         // Standalone window specific initialization
         document.addEventListener('DOMContentLoaded', () => {
-            // Add standalone-specific event listeners
-            document.getElementById('closeBtn').addEventListener('click', () => {
-                window.close();
-            });
-            
             // Auto-show shopping list in standalone mode after short delay
             setTimeout(() => {
                 if (elements.mainMenu.style.display !== 'none') {

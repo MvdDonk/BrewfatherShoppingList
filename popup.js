@@ -206,13 +206,13 @@ async function updateMenuButtonStates() {
             elements.addToListBtn.classList.add('disabled');
             const descriptionElement = elements.addToListBtn.querySelector('.menu-text p');
             if (descriptionElement) {
-                descriptionElement.textContent = 'Use the popup to add recipes';
+                descriptionElement.textContent = 'Use the browser extension popup to add recipes (not available in this window)';
             }
         }
         return;
     }
     
-    // Check if we're on a recipe page
+    // Check if we're on a recipe page (only in normal popup mode)
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     const isOnRecipePage = tab?.url && tab.url.includes('web.brewfather.app/tabs/recipes/recipe/');
     
