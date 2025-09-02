@@ -46,6 +46,8 @@ async function initializePopup() {
         showConfigAlert();
         // Setup event listeners
         setupEventListeners();
+        // Update button states even when showing config alert
+        await updateMenuButtonStates();
         return;
     }
     
@@ -108,12 +110,15 @@ async function updateMenuButtonStates() {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     const isOnRecipePage = tab?.url && tab.url.includes('web.brewfather.app/tabs/recipes/recipe/');
     
+    const descriptionElement = elements.addToListBtn.querySelector('.menu-text p');
+    
     // Enable/disable "Add to Shopping List" button
     if (isOnRecipePage) {
         elements.addToListBtn.classList.remove('disabled');
+        descriptionElement.textContent = 'Add current recipe to your shopping list';
     } else {
         elements.addToListBtn.classList.add('disabled');
-        elements.addToListBtn.querySelector('.menu-text p').textContent = 'Navigate to a recipe page first';
+        descriptionElement.textContent = 'Navigate to a recipe page first';
     }
 }
 
@@ -408,6 +413,14 @@ function setupEventListeners() {
     elements.exportModal.addEventListener('click', (e) => {
         if (e.target === elements.exportModal) {
             elements.exportModal.style.display = 'none';
+        }
+    });
+    
+    // Update button states when window gains focus (in case user switched tabs)
+    window.addEventListener('focus', async () => {
+        // Only update if we're showing the main menu
+        if (elements.mainMenu.style.display !== 'none') {
+            await updateMenuButtonStates();
         }
     });
 }
