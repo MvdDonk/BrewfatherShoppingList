@@ -4,7 +4,8 @@
 const STORAGE_KEYS = {
     USER_ID: 'brewfatherUserId',
     API_KEY: 'brewfatherApiKey',
-    SHOPPING_LIST: 'shoppingList'
+    SHOPPING_LIST: 'shoppingList',
+    SUBSTITUTIONS: 'ingredientSubstitutions'
 };
 
 // Helper function to get stored credentials
@@ -68,6 +69,7 @@ function extractIngredients(recipe) {
                 origin: fermentable.origin,
                 supplier: fermentable.supplier,
                 color: fermentable.color,
+                grainCategory: fermentable.grainCategory,
                 recipeId: recipe._id,
                 recipeName: recipe.name
             });
@@ -122,6 +124,94 @@ function extractIngredients(recipe) {
     return ingredients;
 }
 
+// Check if two fermentables are interchangeable
+function areInterchangeable(fermentable1, fermentable2) {
+    // Must have the same grain category
+    if (fermentable1.grainCategory !== fermentable2.grainCategory) {
+        return false;
+    }
+    
+    // Calculate acceptable color range (±25% for lighter grains, ±20% for darker grains)
+    const color1 = fermentable1.color;
+    const color2 = fermentable2.color;
+    
+    // Use different tolerance based on color intensity
+    let tolerance;
+    if (color1 <= 10) {
+        tolerance = 0.4; // 40% tolerance for very light grains
+    } else if (color1 <= 50) {
+        tolerance = 0.3; // 30% tolerance for light grains
+    } else if (color1 <= 200) {
+        tolerance = 0.25; // 25% tolerance for medium grains
+    } else {
+        tolerance = 0.2; // 20% tolerance for dark grains
+    }
+    
+    const colorDifference = Math.abs(color1 - color2);
+    const maxAllowedDifference = color1 * tolerance;
+    
+    return colorDifference <= maxAllowedDifference;
+}
+
+// Find substitution suggestions for ingredients in shopping list
+function findSubstitutions(shoppingList) {
+    const fermentables = shoppingList.filter(item => item.type === 'fermentable');
+    const substitutions = [];
+    
+    // Group fermentables by grain category for easier comparison
+    const categoryGroups = {};
+    fermentables.forEach(fermentable => {
+        const category = fermentable.grainCategory;
+        if (!categoryGroups[category]) {
+            categoryGroups[category] = [];
+        }
+        categoryGroups[category].push(fermentable);
+    });
+    
+    // Find interchangeable ingredients within each category
+    Object.entries(categoryGroups).forEach(([category, grains]) => {
+        if (grains.length > 1) {
+            // Compare each grain with others in the same category
+            for (let i = 0; i < grains.length; i++) {
+                for (let j = i + 1; j < grains.length; j++) {
+                    const grain1 = grains[i];
+                    const grain2 = grains[j];
+                    
+                    if (areInterchangeable(grain1, grain2)) {
+                        // Check if this substitution group already exists
+                        let existingGroup = substitutions.find(group => 
+                            group.ingredients.some(ing => ing.id === grain1.id || ing.id === grain2.id)
+                        );
+                        
+                        if (existingGroup) {
+                            // Add to existing group if not already present
+                            if (!existingGroup.ingredients.some(ing => ing.id === grain1.id)) {
+                                existingGroup.ingredients.push(grain1);
+                                existingGroup.totalAmount += grain1.amount;
+                            }
+                            if (!existingGroup.ingredients.some(ing => ing.id === grain2.id)) {
+                                existingGroup.ingredients.push(grain2);
+                                existingGroup.totalAmount += grain2.amount;
+                            }
+                        } else {
+                            // Create new substitution group
+                            substitutions.push({
+                                id: `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                                category: category,
+                                ingredients: [grain1, grain2],
+                                totalAmount: grain1.amount + grain2.amount,
+                                unit: grain1.unit
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    return substitutions;
+}
+
 // Get current shopping list
 async function getShoppingList() {
     const result = await chrome.storage.local.get([STORAGE_KEYS.SHOPPING_LIST]);
@@ -172,7 +262,78 @@ async function addToShoppingList(newIngredients) {
     return updatedList;
 }
 
-// Message handler
+// Save substitutions to storage
+async function saveSubstitutions(substitutions) {
+    await chrome.storage.local.set({ [STORAGE_KEYS.SUBSTITUTIONS]: substitutions });
+}
+
+// Get substitutions from storage
+async function getSubstitutions() {
+    const result = await chrome.storage.local.get([STORAGE_KEYS.SUBSTITUTIONS]);
+    return result[STORAGE_KEYS.SUBSTITUTIONS] || [];
+}
+
+// Apply a substitution choice (replace multiple ingredients with one)
+async function applySubstitution(substitutionId, chosenIngredientId) {
+    const substitutions = await getSubstitutions();
+    const substitution = substitutions.find(sub => sub.id === substitutionId);
+    
+    if (!substitution) {
+        throw new Error('Substitution not found');
+    }
+    
+    const chosenIngredient = substitution.ingredients.find(ing => ing.id === chosenIngredientId);
+    if (!chosenIngredient) {
+        throw new Error('Chosen ingredient not found in substitution group');
+    }
+    
+    // Get current shopping list
+    const shoppingList = await getShoppingList();
+    
+    // Remove all ingredients from the substitution group
+    const updatedList = shoppingList.filter(item => 
+        !substitution.ingredients.some(ing => ing.id === item.id)
+    );
+    
+    // Add the chosen ingredient with combined amount
+    const combinedIngredient = {
+        ...chosenIngredient,
+        amount: substitution.totalAmount,
+        recipeIds: substitution.ingredients.flatMap(ing => ing.recipeIds || []),
+        recipeNames: substitution.ingredients.flatMap(ing => ing.recipeNames || [])
+    };
+    
+    updatedList.push(combinedIngredient);
+    
+    // Save updated shopping list
+    await saveShoppingList(updatedList);
+    
+    // Remove the applied substitution
+    const updatedSubstitutions = substitutions.filter(sub => sub.id !== substitutionId);
+    await saveSubstitutions(updatedSubstitutions);
+    
+    return { 
+        shoppingList: updatedList, 
+        substitutions: updatedSubstitutions 
+    };
+}
+
+// Generate new substitutions when shopping list changes
+async function updateSubstitutions() {
+    const shoppingList = await getShoppingList();
+    const substitutions = findSubstitutions(shoppingList);
+    await saveSubstitutions(substitutions);
+    return substitutions;
+}
+
+// Remove from shopping list
+async function removeFromShoppingList(ingredientId) {
+    const currentList = await getShoppingList();
+    const updatedList = currentList.filter(item => item.id !== ingredientId);
+
+    await saveShoppingList(updatedList);
+    return updatedList;
+}
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'addRecipeToShoppingList') {
         handleAddRecipeToShoppingList(message.recipeId)
@@ -211,6 +372,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             .catch(error => sendResponse({ success: false, error: error.message }));
         return true;
     }
+    
+    if (message.action === 'getSubstitutions') {
+        getSubstitutions()
+            .then(substitutions => sendResponse({ success: true, data: substitutions }))
+            .catch(error => sendResponse({ success: false, error: error.message }));
+        return true;
+    }
+    
+    if (message.action === 'updateSubstitutions') {
+        updateSubstitutions()
+            .then(substitutions => sendResponse({ success: true, data: substitutions }))
+            .catch(error => sendResponse({ success: false, error: error.message }));
+        return true;
+    }
+    
+    if (message.action === 'applySubstitution') {
+        applySubstitution(message.substitutionId, message.chosenIngredientId)
+            .then(result => sendResponse({ success: true, data: result }))
+            .catch(error => sendResponse({ success: false, error: error.message }));
+        return true;
+    }
 });
 
 // Handle adding recipe to shopping list
@@ -220,6 +402,9 @@ async function handleAddRecipeToShoppingList(recipeId) {
         const ingredients = extractIngredients(recipe);
         const updatedList = await addToShoppingList(ingredients);
         
+        // Update substitutions after adding ingredients
+        const substitutions = await updateSubstitutions();
+        
         // Set flag to show shopping list when popup opens
         await chrome.storage.local.set({ showShoppingListOnOpen: true });
         
@@ -228,7 +413,8 @@ async function handleAddRecipeToShoppingList(recipeId) {
             data: {
                 recipeName: recipe.name,
                 ingredientsAdded: ingredients.length,
-                totalItems: updatedList.length
+                totalItems: updatedList.length,
+                substitutions: substitutions
             }
         };
     } catch (error) {

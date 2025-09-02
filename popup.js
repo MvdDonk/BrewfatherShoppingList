@@ -138,14 +138,17 @@ async function loadShoppingList() {
     try {
         showLoading();
         
-        const response = await chrome.runtime.sendMessage({
-            action: 'getShoppingList'
-        });
+        // Load both shopping list and substitutions
+        const [shoppingResponse, substitutionsResponse] = await Promise.all([
+            chrome.runtime.sendMessage({ action: 'getShoppingList' }),
+            chrome.runtime.sendMessage({ action: 'getSubstitutions' })
+        ]);
         
-        if (response.success) {
-            displayShoppingList(response.data);
+        if (shoppingResponse.success) {
+            const substitutions = substitutionsResponse.success ? substitutionsResponse.data : [];
+            displayShoppingList(shoppingResponse.data, substitutions);
         } else {
-            showError(response.error || 'Failed to load shopping list');
+            showError(shoppingResponse.error || 'Failed to load shopping list');
         }
     } catch (error) {
         console.error('Error loading shopping list:', error);
@@ -167,7 +170,7 @@ function showError(message) {
 }
 
 // Display shopping list
-function displayShoppingList(ingredients) {
+function displayShoppingList(ingredients, substitutions = []) {
     hideAllStates();
     
     if (!ingredients || ingredients.length === 0) {
@@ -177,6 +180,15 @@ function displayShoppingList(ingredients) {
     
     // Update item count
     elements.itemCount.textContent = `${ingredients.length} item${ingredients.length !== 1 ? 's' : ''}`;
+    
+    // Show/hide substitutions section
+    const substitutionsSection = document.getElementById('substitutionsSection');
+    if (substitutions && substitutions.length > 0) {
+        displaySubstitutions(substitutions);
+        substitutionsSection.style.display = 'block';
+    } else {
+        substitutionsSection.style.display = 'none';
+    }
     
     // Clear and populate ingredients list
     elements.ingredientsList.innerHTML = '';
@@ -198,6 +210,125 @@ function displayShoppingList(ingredients) {
     });
     
     elements.content.style.display = 'block';
+}
+
+// Display substitution suggestions
+function displaySubstitutions(substitutions) {
+    const substitutionsList = document.getElementById('substitutionsList');
+    substitutionsList.innerHTML = '';
+    
+    substitutions.forEach(substitution => {
+        const substitutionItem = createSubstitutionItem(substitution);
+        substitutionsList.appendChild(substitutionItem);
+    });
+}
+
+// Create substitution item element
+function createSubstitutionItem(substitution) {
+    const item = document.createElement('div');
+    item.className = 'substitution-item';
+    item.dataset.substitutionId = substitution.id;
+    
+    const categoryName = substitution.category || 'Unknown Category';
+    const totalAmount = formatAmount(substitution.totalAmount, substitution.unit);
+    
+    item.innerHTML = `
+        <div class="substitution-category">${categoryName}</div>
+        <div class="substitution-total">Total needed: ${totalAmount}</div>
+        <div class="substitution-options" data-substitution-id="${substitution.id}">
+            ${substitution.ingredients.map((ingredient, index) => `
+                <label class="substitution-option" data-ingredient-id="${ingredient.id}">
+                    <input type="radio" name="substitution_${substitution.id}" value="${ingredient.id}" class="substitution-radio" ${index === 0 ? 'checked' : ''}>
+                    <div class="substitution-ingredient">
+                        <div class="substitution-ingredient-name">${escapeHtml(ingredient.name)}</div>
+                        <div class="substitution-ingredient-details">
+                            ${formatAmount(ingredient.amount, ingredient.unit)} • 
+                            Color: ${ingredient.color} • 
+                            ${ingredient.origin || 'Unknown origin'}
+                            ${ingredient.recipeNames ? `<br>From: ${ingredient.recipeNames.join(', ')}` : ''}
+                        </div>
+                    </div>
+                </label>
+            `).join('')}
+        </div>
+        <div class="substitution-actions">
+            <button class="btn btn-apply btn-small" data-substitution-id="${substitution.id}">
+                Use Selected Ingredient
+            </button>
+            <button class="btn btn-secondary btn-small" onclick="dismissSubstitution('${substitution.id}')">
+                Keep Separate
+            </button>
+        </div>
+    `;
+    
+    // Add event listeners
+    const applyBtn = item.querySelector('.btn-apply');
+    applyBtn.addEventListener('click', () => {
+        const selectedRadio = item.querySelector(`input[name="substitution_${substitution.id}"]:checked`);
+        if (selectedRadio) {
+            applySubstitution(substitution.id, selectedRadio.value);
+        }
+    });
+    
+    // Add click handlers for radio button labels
+    const options = item.querySelectorAll('.substitution-option');
+    options.forEach(option => {
+        option.addEventListener('click', (e) => {
+            if (e.target.type !== 'radio') {
+                const radio = option.querySelector('input[type="radio"]');
+                radio.checked = true;
+            }
+        });
+    });
+    
+    return item;
+}
+
+// Apply substitution
+async function applySubstitution(substitutionId, chosenIngredientId) {
+    try {
+        const response = await chrome.runtime.sendMessage({
+            action: 'applySubstitution',
+            substitutionId: substitutionId,
+            chosenIngredientId: chosenIngredientId
+        });
+        
+        if (response.success) {
+            // Reload the shopping list with updated data
+            displayShoppingList(response.data.shoppingList, response.data.substitutions);
+        } else {
+            console.error('Error applying substitution:', response.error);
+            // Show user-friendly error message
+            alert('Failed to apply substitution. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error applying substitution:', error);
+        alert('Failed to apply substitution. Please try again.');
+    }
+}
+
+// Dismiss substitution (remove from suggestions)
+window.dismissSubstitution = async function(substitutionId) {
+    try {
+        // Get current substitutions
+        const response = await chrome.runtime.sendMessage({ action: 'getSubstitutions' });
+        if (response.success) {
+            const updatedSubstitutions = response.data.filter(sub => sub.id !== substitutionId);
+            
+            // Save updated substitutions (without the dismissed one)
+            await chrome.storage.local.set({ ingredientSubstitutions: updatedSubstitutions });
+            
+            // Reload substitutions display
+            displaySubstitutions(updatedSubstitutions);
+            
+            // Hide section if no more substitutions
+            if (updatedSubstitutions.length === 0) {
+                document.getElementById('substitutionsSection').style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Error dismissing substitution:', error);
+    }
 }
 
 // Group ingredients by type
