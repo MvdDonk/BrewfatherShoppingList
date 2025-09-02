@@ -31,6 +31,24 @@
             </div>
 
             <div class="settings-section">
+                <h2>🌐 Language Settings</h2>
+                
+                <div class="form-group">
+                    <label for="languageSelect">Language</label>
+                    <select id="languageSelect">
+                        <option value="system">Follow System Language</option>
+                        <option value="en">English</option>
+                        <option value="nl">Nederlands</option>
+                        <option value="de">Deutsch</option>
+                        <option value="fr">Français</option>
+                    </select>
+                    <small class="help-text">
+                        Choose your preferred language. "Follow System Language" will automatically use your system's language if supported.
+                    </small>
+                </div>
+            </div>
+
+            <div class="settings-section">
                 <h2>🔗 API Configuration</h2>
                 
                 <div class="form-group">
@@ -116,6 +134,7 @@
         </main>
     </div>
 
+    <script src="i18n.js"></script>
     <script src="options.js"></script>
 </body>
 </html>

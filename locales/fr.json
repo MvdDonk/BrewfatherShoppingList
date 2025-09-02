@@ -1,0 +1,81 @@
+{
+  "appName": "Liste de Courses Brewfather",
+  "menu": {
+    "addToList": "Ajouter à la Liste",
+    "addToListDescription": "Ajouter la recette actuelle à votre liste de courses",
+    "addToListDisabled": "Naviguez d'abord vers une page de recette",
+    "addToListStandalone": "Utilisez le popup de l'extension du navigateur pour ajouter des recettes (non disponible dans cette fenêtre)",
+    "viewShoppingList": "Voir la Liste de Courses",
+    "viewShoppingListDescription": "Voir votre liste de courses actuelle",
+    "viewSubstitutions": "Voir les Substitutions",
+    "viewSubstitutionsDescription": "Voir les suggestions de substitution d'ingrédients",
+    "settings": "Paramètres",
+    "settingsDescription": "Configurez vos identifiants Brewfather et préférences"
+  },
+  "shoppingList": {
+    "title": "Liste de Courses",
+    "empty": "Votre liste de courses est vide",
+    "emptyDescription": "Ajoutez des recettes de Brewfather pour commencer",
+    "itemCount": "{{count}} article",
+    "itemCount_plural": "{{count}} articles",
+    "loading": "Chargement de la liste de courses...",
+    "error": "Échec du chargement de la liste de courses",
+    "retry": "Réessayer",
+    "clear": "Tout effacer",
+    "clearConfirm": "Êtes-vous sûr de vouloir effacer tous les articles de votre liste de courses ?",
+    "export": "Exporter",
+    "popOut": "Ouvrir dans une nouvelle fenêtre",
+    "backToMenu": "Retour au Menu",
+    "remove": "Supprimer"
+  },
+  "substitutions": {
+    "title": "Substitutions d'Ingrédients",
+    "subtitle": "Combinez des ingrédients similaires pour optimiser vos courses",
+    "empty": "Aucune substitution disponible",
+    "emptyDescription": "Ajoutez plus de recettes avec des ingrédients similaires pour voir les suggestions de substitution",
+    "loading": "Chargement des substitutions...",
+    "totalNeeded": "Total nécessaire : {{amount}}",
+    "applySelected": "Appliquer les Substitutions Sélectionnées",
+    "applying": "Application...",
+    "backToMenu": "Retour au Menu",
+    "from": "De : {{recipes}}"
+  },
+  "export": {
+    "title": "Exporter la Liste de Courses",
+    "text": "Exporter en Texte",
+    "csv": "Exporter en CSV",
+    "pdf": "Exporter en PDF",
+    "close": "Fermer",
+    "filename": "brewfather-liste-courses-{{date}}"
+  },
+  "config": {
+    "title": "Configuration Requise",
+    "description": "Veuillez configurer vos identifiants Brewfather dans les paramètres de l'extension pour utiliser cette fonctionnalité.",
+    "openSettings": "Ouvrir les Paramètres"
+  },
+  "ingredientTypes": {
+    "fermentable": "🌾 Fermentescibles",
+    "hop": "🌿 Houblon",
+    "yeast": "🦠 Levures",
+    "other": "📦 Autres"
+  },
+  "messages": {
+    "added": "✅ Ajouté !",
+    "adding": "Ajout à la liste...",
+    "failed": "Échec de l'ajout de la recette",
+    "failedSubstitution": "Échec de l'application de la substitution. Veuillez réessayer.",
+    "failedSubstitutions": "Échec de l'application des substitutions. Veuillez réessayer.",
+    "selectSubstitutions": "Veuillez sélectionner des ingrédients pour la substitution.",
+    "popupBlocked": "Pop-up bloqué. Veuillez autoriser les pop-ups pour cette extension.",
+    "failedPopout": "Échec de la création d'une nouvelle fenêtre",
+    "navigateToRecipe": "Veuillez d'abord naviguer vers une page de recette Brewfather",
+    "noRecipeId": "Impossible de détecter l'ID de recette depuis la page actuelle",
+    "usePopup": "Veuillez utiliser le popup de l'extension pour ajouter des recettes depuis les pages de recettes.",
+    "accessTabError": "Impossible d'accéder à l'onglet actuel"
+  },
+  "common": {
+    "color": "Couleur",
+    "origin": "Origine inconnue",
+    "generated": "Généré : {{date}}"
+  }
+}

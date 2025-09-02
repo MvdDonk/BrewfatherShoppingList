@@ -1,0 +1,81 @@
+{
+  "appName": "Brewfather Boodschappenlijst",
+  "menu": {
+    "addToList": "Toevoegen aan Lijst",
+    "addToListDescription": "Voeg huidige recept toe aan je boodschappenlijst",
+    "addToListDisabled": "Ga eerst naar een receptpagina",
+    "addToListStandalone": "Gebruik de browser extensie popup om recepten toe te voegen (niet beschikbaar in dit venster)",
+    "viewShoppingList": "Bekijk Boodschappenlijst",
+    "viewShoppingListDescription": "Bekijk je huidige boodschappenlijst",
+    "viewSubstitutions": "Bekijk Vervangingen",
+    "viewSubstitutionsDescription": "Bekijk suggesties voor ingrediënt vervangingen",
+    "settings": "Instellingen",
+    "settingsDescription": "Configureer je Brewfather inloggegevens en voorkeuren"
+  },
+  "shoppingList": {
+    "title": "Boodschappenlijst",
+    "empty": "Je boodschappenlijst is leeg",
+    "emptyDescription": "Voeg recepten van Brewfather toe om te beginnen",
+    "itemCount": "{{count}} item",
+    "itemCount_plural": "{{count}} items",
+    "loading": "Boodschappenlijst laden...",
+    "error": "Kan boodschappenlijst niet laden",
+    "retry": "Opnieuw proberen",
+    "clear": "Alles wissen",
+    "clearConfirm": "Weet je zeker dat je alle items van je boodschappenlijst wilt verwijderen?",
+    "export": "Exporteren",
+    "popOut": "In nieuw venster openen",
+    "backToMenu": "Terug naar Menu",
+    "remove": "Verwijderen"
+  },
+  "substitutions": {
+    "title": "Ingrediënt Vervangingen",
+    "subtitle": "Combineer vergelijkbare ingrediënten om je boodschappen te optimaliseren",
+    "empty": "Geen vervangingen beschikbaar",
+    "emptyDescription": "Voeg meer recepten toe met vergelijkbare ingrediënten om vervangingssuggesties te zien",
+    "loading": "Vervangingen laden...",
+    "totalNeeded": "Totaal nodig: {{amount}}",
+    "applySelected": "Geselecteerde Vervangingen Toepassen",
+    "applying": "Toepassen...",
+    "backToMenu": "Terug naar Menu",
+    "from": "Van: {{recipes}}"
+  },
+  "export": {
+    "title": "Boodschappenlijst Exporteren",
+    "text": "Exporteren als Tekst",
+    "csv": "Exporteren als CSV",
+    "pdf": "Exporteren als PDF",
+    "close": "Sluiten",
+    "filename": "brewfather-boodschappenlijst-{{date}}"
+  },
+  "config": {
+    "title": "Configuratie Vereist",
+    "description": "Configureer je Brewfather inloggegevens in de extensie-instellingen om deze functie te gebruiken.",
+    "openSettings": "Instellingen Openen"
+  },
+  "ingredientTypes": {
+    "fermentable": "🌾 Vergistbare Stoffen",
+    "hop": "🌿 Hop",
+    "yeast": "🦠 Gist",
+    "other": "📦 Overig"
+  },
+  "messages": {
+    "added": "✅ Toegevoegd!",
+    "adding": "Toevoegen aan lijst...",
+    "failed": "Kan recept niet toevoegen",
+    "failedSubstitution": "Kan vervanging niet toepassen. Probeer opnieuw.",
+    "failedSubstitutions": "Kan vervangingen niet toepassen. Probeer opnieuw.",
+    "selectSubstitutions": "Selecteer ingrediënten voor vervanging.",
+    "popupBlocked": "Pop-up geblokkeerd. Sta pop-ups toe voor deze extensie.",
+    "failedPopout": "Kan nieuw venster niet maken",
+    "navigateToRecipe": "Ga eerst naar een Brewfather receptpagina",
+    "noRecipeId": "Kan recept-ID niet detecteren van huidige pagina",
+    "usePopup": "Gebruik de extensie popup om recepten toe te voegen van receptpagina's.",
+    "accessTabError": "Kan huidige tabblad niet benaderen"
+  },
+  "common": {
+    "color": "Kleur",
+    "origin": "Onbekende herkomst",
+    "generated": "Gegenereerd: {{date}}"
+  }
+}

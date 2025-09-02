@@ -1,0 +1,81 @@
+{
+  "appName": "Brewfather Einkaufsliste",
+  "menu": {
+    "addToList": "Zur Liste hinzufügen",
+    "addToListDescription": "Aktuelles Rezept zur Einkaufsliste hinzufügen",
+    "addToListDisabled": "Zuerst zu einer Rezeptseite navigieren",
+    "addToListStandalone": "Verwenden Sie das Browser-Erweiterungs-Popup, um Rezepte hinzuzufügen (in diesem Fenster nicht verfügbar)",
+    "viewShoppingList": "Einkaufsliste anzeigen",
+    "viewShoppingListDescription": "Ihre aktuelle Einkaufsliste anzeigen",
+    "viewSubstitutions": "Ersatzstoffe anzeigen",
+    "viewSubstitutionsDescription": "Vorschläge für Zutatenersatz anzeigen",
+    "settings": "Einstellungen",
+    "settingsDescription": "Konfigurieren Sie Ihre Brewfather-Anmeldedaten und Einstellungen"
+  },
+  "shoppingList": {
+    "title": "Einkaufsliste",
+    "empty": "Ihre Einkaufsliste ist leer",
+    "emptyDescription": "Fügen Sie Rezepte von Brewfather hinzu, um zu beginnen",
+    "itemCount": "{{count}} Artikel",
+    "itemCount_plural": "{{count}} Artikel",
+    "loading": "Einkaufsliste wird geladen...",
+    "error": "Einkaufsliste konnte nicht geladen werden",
+    "retry": "Erneut versuchen",
+    "clear": "Alle löschen",
+    "clearConfirm": "Sind Sie sicher, dass Sie alle Artikel aus Ihrer Einkaufsliste entfernen möchten?",
+    "export": "Exportieren",
+    "popOut": "In neuem Fenster öffnen",
+    "backToMenu": "Zurück zum Menü",
+    "remove": "Entfernen"
+  },
+  "substitutions": {
+    "title": "Zutatenersatz",
+    "subtitle": "Kombinieren Sie ähnliche Zutaten, um Ihren Einkauf zu optimieren",
+    "empty": "Keine Ersatzstoffe verfügbar",
+    "emptyDescription": "Fügen Sie mehr Rezepte mit ähnlichen Zutaten hinzu, um Ersatzvorschläge zu sehen",
+    "loading": "Ersatzstoffe werden geladen...",
+    "totalNeeded": "Insgesamt benötigt: {{amount}}",
+    "applySelected": "Ausgewählte Ersatzstoffe anwenden",
+    "applying": "Wird angewendet...",
+    "backToMenu": "Zurück zum Menü",
+    "from": "Von: {{recipes}}"
+  },
+  "export": {
+    "title": "Einkaufsliste exportieren",
+    "text": "Als Text exportieren",
+    "csv": "Als CSV exportieren",
+    "pdf": "Als PDF exportieren",
+    "close": "Schließen",
+    "filename": "brewfather-einkaufsliste-{{date}}"
+  },
+  "config": {
+    "title": "Konfiguration erforderlich",
+    "description": "Bitte konfigurieren Sie Ihre Brewfather-Anmeldedaten in den Erweiterungseinstellungen, um diese Funktion zu nutzen.",
+    "openSettings": "Einstellungen öffnen"
+  },
+  "ingredientTypes": {
+    "fermentable": "🌾 Vergärbare Stoffe",
+    "hop": "🌿 Hopfen",
+    "yeast": "🦠 Hefe",
+    "other": "📦 Sonstiges"
+  },
+  "messages": {
+    "added": "✅ Hinzugefügt!",
+    "adding": "Zur Liste hinzufügen...",
+    "failed": "Rezept konnte nicht hinzugefügt werden",
+    "failedSubstitution": "Ersatz konnte nicht angewendet werden. Bitte erneut versuchen.",
+    "failedSubstitutions": "Ersatzstoffe konnten nicht angewendet werden. Bitte erneut versuchen.",
+    "selectSubstitutions": "Bitte wählen Sie Zutaten für den Ersatz aus.",
+    "popupBlocked": "Pop-up blockiert. Bitte erlauben Sie Pop-ups für diese Erweiterung.",
+    "failedPopout": "Neues Fenster konnte nicht erstellt werden",
+    "navigateToRecipe": "Bitte navigieren Sie zuerst zu einer Brewfather-Rezeptseite",
+    "noRecipeId": "Rezept-ID konnte von der aktuellen Seite nicht erkannt werden",
+    "usePopup": "Bitte verwenden Sie das Erweiterungs-Popup, um Rezepte von Rezeptseiten hinzuzufügen.",
+    "accessTabError": "Aktueller Tab konnte nicht aufgerufen werden"
+  },
+  "common": {
+    "color": "Farbe",
+    "origin": "Unbekannte Herkunft",
+    "generated": "Erstellt: {{date}}"
+  }
+}

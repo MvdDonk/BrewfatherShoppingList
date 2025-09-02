@@ -28,6 +28,15 @@
     "default_title": "Brewfather Shopping List"
   },
   "options_page": "options.html",
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "standalone.html",
+        "locales/*.json"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "icons": {
     "48": "icons/icon-48.webp",
     "128": "icons/icon-128.webp"

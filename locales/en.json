@@ -1,0 +1,81 @@
+{
+  "appName": "Brewfather Shopping List",
+  "menu": {
+    "addToList": "Add to Shopping List",
+    "addToListDescription": "Add current recipe to your shopping list",
+    "addToListDisabled": "Navigate to a recipe page first",
+    "addToListStandalone": "Use the browser extension popup to add recipes (not available in this window)",
+    "viewShoppingList": "View Shopping List",
+    "viewShoppingListDescription": "See your current shopping list",
+    "viewSubstitutions": "View Substitutions",
+    "viewSubstitutionsDescription": "See ingredient substitution suggestions",
+    "settings": "Settings",
+    "settingsDescription": "Configure your Brewfather credentials and preferences"
+  },
+  "shoppingList": {
+    "title": "Shopping List",
+    "empty": "Your shopping list is empty",
+    "emptyDescription": "Add recipes from Brewfather to get started",
+    "itemCount": "{{count}} item",
+    "itemCount_plural": "{{count}} items",
+    "loading": "Loading shopping list...",
+    "error": "Failed to load shopping list",
+    "retry": "Retry",
+    "clear": "Clear All",
+    "clearConfirm": "Are you sure you want to clear all items from your shopping list?",
+    "export": "Export",
+    "popOut": "Pop Out",
+    "backToMenu": "Back to Menu",
+    "remove": "Remove"
+  },
+  "substitutions": {
+    "title": "Ingredient Substitutions",
+    "subtitle": "Combine similar ingredients to optimize your shopping",
+    "empty": "No substitutions available",
+    "emptyDescription": "Add more recipes with similar ingredients to see substitution suggestions",
+    "loading": "Loading substitutions...",
+    "totalNeeded": "Total needed: {{amount}}",
+    "applySelected": "Apply Selected Substitutions",
+    "applying": "Applying...",
+    "backToMenu": "Back to Menu",
+    "from": "From: {{recipes}}"
+  },
+  "export": {
+    "title": "Export Shopping List",
+    "text": "Export as Text",
+    "csv": "Export as CSV",
+    "pdf": "Export as PDF",
+    "close": "Close",
+    "filename": "brewfather-shopping-list-{{date}}"
+  },
+  "config": {
+    "title": "Configuration Required",
+    "description": "Please configure your Brewfather credentials in the extension settings to use this feature.",
+    "openSettings": "Open Settings"
+  },
+  "ingredientTypes": {
+    "fermentable": "🌾 Fermentables",
+    "hop": "🌿 Hops",
+    "yeast": "🦠 Yeasts",
+    "other": "📦 Other"
+  },
+  "messages": {
+    "added": "✅ Added!",
+    "adding": "Adding to list...",
+    "failed": "Failed to add recipe",
+    "failedSubstitution": "Failed to apply substitution. Please try again.",
+    "failedSubstitutions": "Failed to apply substitutions. Please try again.",
+    "selectSubstitutions": "Please select ingredients for substitution.",
+    "popupBlocked": "Pop-up blocked. Please allow pop-ups for this extension.",
+    "failedPopout": "Failed to create new window",
+    "navigateToRecipe": "Please navigate to a Brewfather recipe page first",
+    "noRecipeId": "Could not detect recipe ID from current page",
+    "usePopup": "Please use the extension popup to add recipes from recipe pages.",
+    "accessTabError": "Could not access current tab"
+  },
+  "common": {
+    "color": "Color",
+    "origin": "Unknown origin",
+    "generated": "Generated: {{date}}"
+  }
+}

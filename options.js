@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // DOM elements
 const elements = {
     themeSelect: document.getElementById('themeSelect'),
+    languageSelect: document.getElementById('languageSelect'),
     userId: document.getElementById('userId'),
     apiKey: document.getElementById('apiKey'),
     saveBtn: document.getElementById('saveBtn'),
@@ -25,7 +26,7 @@ async function initializeOptions() {
 // Load existing settings
 async function loadSettings() {
     try {
-        const result = await chrome.storage.sync.get(['brewfatherUserId', 'brewfatherApiKey', 'theme']);
+        const result = await chrome.storage.sync.get(['brewfatherUserId', 'brewfatherApiKey', 'theme', 'language']);
         
         if (result.brewfatherUserId) {
             elements.userId.value = result.brewfatherUserId;
@@ -39,6 +40,12 @@ async function loadSettings() {
             elements.themeSelect.value = result.theme;
         } else {
             elements.themeSelect.value = 'system'; // Default to system preference
+        }
+        
+        if (result.language) {
+            elements.languageSelect.value = result.language;
+        } else {
+            elements.languageSelect.value = 'system'; // Default to system language
         }
     } catch (error) {
         console.error('Error loading settings:', error);
@@ -82,6 +89,7 @@ function updateTestButtonState() {
 // Save settings
 async function saveSettings() {
     const theme = elements.themeSelect.value;
+    const language = elements.languageSelect.value;
     const userId = elements.userId.value.trim();
     const apiKey = elements.apiKey.value.trim();
     
@@ -107,6 +115,7 @@ async function saveSettings() {
         // Save to storage
         await chrome.storage.sync.set({
             theme: theme,
+            language: language,
             brewfatherUserId: userId,
             brewfatherApiKey: apiKey
         });

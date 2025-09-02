@@ -5,6 +5,10 @@ const isStandalone = document.body.dataset.context === 'standalone' ||
                     (window.location.href.includes('standalone.html'));
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize translations first
+    await i18n.init();
+    
+    // Then initialize the popup
     await initializePopup();
 });
 
@@ -58,6 +62,9 @@ const elements = {
 async function initializePopup() {
     // Apply theme first
     await applyTheme();
+    
+    // Update UI with translations
+    updateUITranslations();
     
     // Set up storage listeners for automatic updates
     setupStorageListeners();
@@ -117,8 +124,95 @@ function setupStorageListeners() {
             if (changes.theme) {
                 applyTheme();
             }
+            
+            // Handle language changes
+            if (changes.language) {
+                i18n.setLanguage(changes.language.newValue).then(() => {
+                    updateUITranslations();
+                });
+            }
         }
     });
+}
+
+// Update UI with current translations
+function updateUITranslations() {
+    try {
+        // Update page title
+        document.title = i18n.t('appName');
+        
+        // Update header
+        const header = document.querySelector('.popup-header h1');
+        if (header) {
+            header.textContent = `🍺 ${i18n.t('appName')}`;
+        }
+        
+        // Update menu items
+        updateMenuItemText('addToListBtn', 'menu.addToList', 'menu.addToListDescription');
+        updateMenuItemText('showShoppingListBtn', 'menu.viewShoppingList', 'menu.viewShoppingListDescription');
+        updateMenuItemText('showSubstitutionsBtn', 'menu.viewSubstitutions', 'menu.viewSubstitutionsDescription');
+        updateMenuItemText('settingsMenuBtn', 'menu.settings', 'menu.settingsDescription');
+        
+        // Update shopping list view
+        updateTextContent('backToMenuBtn .btn-text', 'shoppingList.backToMenu');
+        updateTextContent('#shoppingListView .view-header h2', 'shoppingList.title');
+        updateTextContent('#emptyState h3', 'shoppingList.empty');
+        updateTextContent('#emptyState p', 'shoppingList.emptyDescription');
+        updateTextContent('#loadingIndicator p', 'shoppingList.loading');
+        updateTextContent('#errorState h3', 'shoppingList.error');
+        updateTextContent('#retryBtn .btn-text', 'shoppingList.retry');
+        updateTextContent('#clearBtn .btn-text', 'shoppingList.clear');
+        updateTextContent('#exportBtn .btn-text', 'shoppingList.export');
+        updateTextContent('#popOutBtn .btn-text', 'shoppingList.popOut');
+        
+        // Update substitutions view
+        updateTextContent('#backToMenuFromSubstitutionsBtn .btn-text', 'substitutions.backToMenu');
+        updateTextContent('#substitutionsView .view-header h2', 'substitutions.title');
+        updateTextContent('#substitutionsView .view-subtitle', 'substitutions.subtitle');
+        updateTextContent('#substitutionsEmptyState h3', 'substitutions.empty');
+        updateTextContent('#substitutionsEmptyState p', 'substitutions.emptyDescription');
+        updateTextContent('#substitutionsLoadingIndicator p', 'substitutions.loading');
+        updateTextContent('#applySubstitutionsBtn', 'substitutions.applySelected');
+        
+        // Update export modal
+        updateTextContent('#exportModal h2', 'export.title');
+        updateTextContent('#exportTxt .btn-text', 'export.text');
+        updateTextContent('#exportCsv .btn-text', 'export.csv');
+        updateTextContent('#exportPdf .btn-text', 'export.pdf');
+        updateTextContent('#closeExportModal .btn-text', 'export.close');
+        
+        // Update config alert
+        updateTextContent('#configAlert h2', 'config.title');
+        updateTextContent('#configAlert p', 'config.description');
+        updateTextContent('#openSettingsBtn .btn-text', 'config.openSettings');
+        
+    } catch (error) {
+        console.error('Error updating UI translations:', error);
+    }
+}
+
+// Helper function to update menu item text
+function updateMenuItemText(buttonId, titleKey, descriptionKey) {
+    const button = document.getElementById(buttonId);
+    if (button) {
+        const titleElement = button.querySelector('.menu-text h3');
+        const descriptionElement = button.querySelector('.menu-text p');
+        
+        if (titleElement) {
+            titleElement.textContent = i18n.t(titleKey);
+        }
+        if (descriptionElement) {
+            descriptionElement.textContent = i18n.t(descriptionKey);
+        }
+    }
+}
+
+// Helper function to update text content
+function updateTextContent(selector, translationKey) {
+    const element = document.querySelector(selector);
+    if (element) {
+        element.textContent = i18n.t(translationKey);
+    }
 }
 
 // Handle shopping list updates from storage
@@ -204,7 +298,7 @@ async function updateMenuButtonStates() {
             elements.addToListBtn.classList.add('disabled');
             const descriptionElement = elements.addToListBtn.querySelector('.menu-text p');
             if (descriptionElement) {
-                descriptionElement.textContent = 'Use the browser extension popup to add recipes (not available in this window)';
+                descriptionElement.textContent = i18n.t('menu.addToListStandalone');
             }
         }
         return;
@@ -219,10 +313,10 @@ async function updateMenuButtonStates() {
     // Enable/disable "Add to Shopping List" button
     if (isOnRecipePage) {
         elements.addToListBtn.classList.remove('disabled');
-        descriptionElement.textContent = 'Add current recipe to your shopping list';
+        descriptionElement.textContent = i18n.t('menu.addToListDescription');
     } else {
         elements.addToListBtn.classList.add('disabled');
-        descriptionElement.textContent = 'Navigate to a recipe page first';
+        descriptionElement.textContent = i18n.t('menu.addToListDisabled');
     }
 }
 
@@ -280,7 +374,7 @@ function displayShoppingList(ingredients, substitutions = []) {
     }
     
     // Update item count
-    elements.itemCount.textContent = `${ingredients.length} item${ingredients.length !== 1 ? 's' : ''}`;
+    elements.itemCount.textContent = i18n.t('shoppingList.itemCount', { count: ingredients.length });
     
     // Update substitution counts but don't display them inline
     updateSubstitutionCounts(substitutions);
@@ -421,13 +515,13 @@ async function applyAllSelectedSubstitutions() {
         });
         
         if (substitutions.length === 0) {
-            alert('Please select ingredients for substitution.');
+            alert(i18n.t('messages.selectSubstitutions'));
             return;
         }
         
         // Disable button during processing
         elements.applySubstitutionsBtn.disabled = true;
-        elements.applySubstitutionsBtn.textContent = 'Applying...';
+        elements.applySubstitutionsBtn.textContent = i18n.t('substitutions.applying');
         
         // Apply all substitutions
         const response = await chrome.runtime.sendMessage({
@@ -443,11 +537,11 @@ async function applyAllSelectedSubstitutions() {
         }
     } catch (error) {
         console.error('Error applying substitutions:', error);
-        alert('Failed to apply substitutions. Please try again.');
+        alert(i18n.t('messages.failedSubstitutions'));
     } finally {
         // Re-enable button
         elements.applySubstitutionsBtn.disabled = false;
-        elements.applySubstitutionsBtn.textContent = 'Apply Selected Substitutions';
+        elements.applySubstitutionsBtn.textContent = i18n.t('substitutions.applySelected');
     }
 }
 
@@ -473,7 +567,7 @@ function createSubstitutionItem(substitution) {
     
     item.innerHTML = `
         <div class="substitution-category">${categoryName}</div>
-        <div class="substitution-total">Total needed: ${totalAmount}</div>
+        <div class="substitution-total">${i18n.t('substitutions.totalNeeded', { amount: totalAmount })}</div>
         <div class="substitution-options" data-substitution-id="${substitution.id}">
             ${substitution.ingredients.map((ingredient, index) => `
                 <label class="substitution-option" data-ingredient-id="${ingredient.id}">
@@ -482,9 +576,9 @@ function createSubstitutionItem(substitution) {
                         <div class="substitution-ingredient-name">${escapeHtml(ingredient.name)}</div>
                         <div class="substitution-ingredient-details">
                             ${formatAmount(ingredient.amount, ingredient.unit)} • 
-                            Color: ${ingredient.color} • 
-                            ${ingredient.origin || 'Unknown origin'}
-                            ${ingredient.recipeNames ? `<br>From: ${ingredient.recipeNames.join(', ')}` : ''}
+                            ${i18n.t('common.color')}: ${ingredient.color} • 
+                            ${ingredient.origin || i18n.t('common.origin')}
+                            ${ingredient.recipeNames ? `<br>${i18n.t('substitutions.from', { recipes: ingredient.recipeNames.join(', ') })}` : ''}
                         </div>
                     </div>
                 </label>
@@ -587,13 +681,7 @@ function createGroupHeader(type) {
 
 // Get display name for ingredient type
 function getTypeDisplayName(type) {
-    const typeNames = {
-        fermentable: '🌾 Fermentables',
-        hop: '🌿 Hops',
-        yeast: '🦠 Yeasts',
-        other: '📦 Other'
-    };
-    return typeNames[type] || '📦 Other';
+    return i18n.t(`ingredientTypes.${type}`) || i18n.t('ingredientTypes.other');
 }
 
 // Create ingredient item element
@@ -744,7 +832,7 @@ function setupEventListeners() {
     
     // Clear all button
     elements.clearBtn.addEventListener('click', () => {
-        if (confirm('Are you sure you want to clear all items from your shopping list?')) {
+        if (confirm(i18n.t('shoppingList.clearConfirm'))) {
             clearShoppingList();
         }
     });
@@ -809,11 +897,11 @@ async function popOutToNewWindow() {
         if (newWindow) {
             newWindow.focus();
         } else {
-            alert('Pop-up blocked. Please allow pop-ups for this extension.');
+            alert(i18n.t('messages.popupBlocked'));
         }
     } catch (error) {
         console.error('Error creating pop-out window:', error);
-        alert('Failed to create new window');
+        alert(i18n.t('messages.failedPopout'));
     }
 }
 
@@ -821,7 +909,7 @@ async function addCurrentRecipeToShoppingList() {
     try {
         // In standalone mode, we can't access the current tab
         if (isStandalone) {
-            alert('Please use the extension popup to add recipes from recipe pages.');
+            alert(i18n.t('messages.usePopup'));
             return;
         }
         
@@ -829,7 +917,7 @@ async function addCurrentRecipeToShoppingList() {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         
         if (!tab?.url || !tab.url.includes('web.brewfather.app/tabs/recipes/recipe/')) {
-            alert('Please navigate to a Brewfather recipe page first');
+            alert(i18n.t('messages.navigateToRecipe'));
             return;
         }
         
@@ -838,7 +926,7 @@ async function addCurrentRecipeToShoppingList() {
         const match = tab.url.match(urlPattern);
         
         if (!match) {
-            alert('Could not detect recipe ID from current page');
+            alert(i18n.t('messages.noRecipeId'));
             return;
         }
         
@@ -846,7 +934,7 @@ async function addCurrentRecipeToShoppingList() {
         
         // Show loading state in menu
         const originalText = elements.addToListBtn.querySelector('.menu-text h3').textContent;
-        elements.addToListBtn.querySelector('.menu-text h3').textContent = 'Adding to list...';
+        elements.addToListBtn.querySelector('.menu-text h3').textContent = i18n.t('messages.adding');
         elements.addToListBtn.classList.add('disabled');
         
         try {
@@ -858,12 +946,12 @@ async function addCurrentRecipeToShoppingList() {
             
             if (response.success) {
                 // Show success and then navigate to shopping list
-                elements.addToListBtn.querySelector('.menu-text h3').textContent = '✅ Added!';
+                elements.addToListBtn.querySelector('.menu-text h3').textContent = i18n.t('messages.added');
                 setTimeout(() => {
                     showShoppingListView();
                 }, 1000);
             } else {
-                throw new Error(response.error || 'Failed to add recipe');
+                throw new Error(response.error || i18n.t('messages.failed'));
             }
         } catch (error) {
             console.error('Error adding recipe to shopping list:', error);
@@ -873,7 +961,7 @@ async function addCurrentRecipeToShoppingList() {
         }
     } catch (error) {
         console.error('Error getting current tab:', error);
-        alert('Could not access current tab');
+        alert(i18n.t('messages.accessTabError'));
     }
 }
 async function clearShoppingList() {
@@ -943,7 +1031,8 @@ async function exportShoppingList(format) {
         
         const ingredients = response.data;
         let content = '';
-        let filename = `brewfather-shopping-list-${new Date().toISOString().split('T')[0]}`;
+        const dateStr = new Date().toISOString().split('T')[0];
+        let filename = i18n.t('export.filename', { date: dateStr });
         
         switch (format) {
             case 'txt':
@@ -978,9 +1067,9 @@ async function exportShoppingList(format) {
 
 // Export to text format
 function exportToText(ingredients) {
-    let content = 'BREWFATHER SHOPPING LIST\n';
+    let content = i18n.t('appName').toUpperCase() + '\n';
     content += '========================\n';
-    content += `Generated: ${new Date().toLocaleDateString()}\n\n`;
+    content += i18n.t('common.generated', { date: new Date().toLocaleDateString() }) + '\n\n';
     
     const grouped = groupIngredientsByType(ingredients);
     
@@ -1092,8 +1181,8 @@ function generatePrintContent(ingredients) {
             </style>
         </head>
         <body>
-            <h1>🍺 Brewfather Shopping List</h1>
-            <p>Generated: ${new Date().toLocaleDateString()}</p>
+            <h1>🍺 ${i18n.t('appName')}</h1>
+            <p>${i18n.t('common.generated', { date: new Date().toLocaleDateString() })}</p>
     `;
     
     // Define group order (fermentables, hops, yeasts, other)
