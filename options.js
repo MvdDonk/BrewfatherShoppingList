@@ -117,15 +117,15 @@ function setupEventListeners() {
         updateUITranslations();
     });
     
-    // Handle page unload - revert to original language if not saved
+    // Handle page unload - revert all unsaved changes
     window.addEventListener('beforeunload', async () => {
-        await revertToOriginalLanguage();
+        await revertToOriginalSettings();
     });
     
     // Handle visibility change (when user switches tabs/closes)
     document.addEventListener('visibilitychange', async () => {
         if (document.hidden) {
-            await revertToOriginalLanguage();
+            await revertToOriginalSettings();
         }
     });
 }
@@ -147,6 +147,10 @@ async function resetToSaved() {
         
         await i18n.setLanguage(targetLanguage);
         updateUITranslations();
+        
+        // Reset theme to saved version
+        applyTheme();
+        
         updateTestButtonState();
         
         showStatus(i18n.t('settings.resetSuccess'), 'info');
@@ -156,14 +160,12 @@ async function resetToSaved() {
     }
 }
 
-// Revert to original language if settings weren't saved
-async function revertToOriginalLanguage() {
+// Revert all settings to their original values if not saved
+async function revertToOriginalSettings() {
     try {
-        // Check if current language selection matches what's saved in storage
-        const currentSelection = elements.languageSelect.value;
-        
-        if (currentSelection !== originalSettings.language) {
-            // Revert language without saving
+        // Revert language if changed
+        const currentLanguageSelection = elements.languageSelect.value;
+        if (currentLanguageSelection !== originalSettings.language) {
             let targetLanguage = originalSettings.language;
             
             if (originalSettings.language === 'system') {
@@ -173,8 +175,25 @@ async function revertToOriginalLanguage() {
             await i18n.loadTranslations(targetLanguage);
             i18n.currentLanguage = targetLanguage;
         }
+        
+        // Revert theme if changed
+        const currentThemeSelection = elements.themeSelect.value;
+        if (currentThemeSelection !== originalSettings.theme) {
+            // Apply the original theme
+            applyTheme();
+        }
+        
+        // Revert credentials if changed
+        const currentUserId = elements.userId.value.trim();
+        const currentApiKey = elements.apiKey.value.trim();
+        
+        if (currentUserId !== originalSettings.userId || currentApiKey !== originalSettings.apiKey) {
+            // Note: We don't need to actively revert these in the DOM since the page is unloading
+            // This is mainly for consistency and potential future use
+        }
+        
     } catch (error) {
-        console.error('Error reverting language:', error);
+        console.error('Error reverting settings:', error);
     }
 }
 
@@ -343,28 +362,32 @@ function isValidApiKey(apiKey) {
 
 // Theme handling functions
 async function handleThemeChange() {
-    const theme = elements.themeSelect.value;
-    
-    try {
-        // Save theme preference immediately
-        await chrome.storage.sync.set({ theme: theme });
-        applyTheme();
-        
-        showStatus('Theme preference saved!', 'success');
-    } catch (error) {
-        console.error('Error saving theme preference:', error);
-        showStatus('Failed to save theme preference', 'error');
-    }
+    // Preview theme change without saving (similar to language handling)
+    applyThemePreview();
 }
 
-function applyTheme() {
+function applyThemePreview() {
     const theme = elements.themeSelect.value;
     
     // Remove existing theme attributes
     document.documentElement.removeAttribute('data-theme');
     
     if (theme !== 'system') {
-        // Apply user-selected theme
+        // Apply user-selected theme for preview
+        document.documentElement.setAttribute('data-theme', theme);
+    }
+    // If 'system', let CSS media query handle it
+}
+
+function applyTheme() {
+    // Use saved theme, not current form selection
+    const theme = originalSettings.theme;
+    
+    // Remove existing theme attributes
+    document.documentElement.removeAttribute('data-theme');
+    
+    if (theme !== 'system') {
+        // Apply saved theme
         document.documentElement.setAttribute('data-theme', theme);
     }
     // If 'system', let CSS media query handle it
