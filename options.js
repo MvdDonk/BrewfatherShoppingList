@@ -16,7 +16,16 @@ const elements = {
     apiKey: document.getElementById('apiKey'),
     saveBtn: document.getElementById('saveBtn'),
     testBtn: document.getElementById('testBtn'),
+    resetBtn: document.getElementById('resetBtn'),
     statusMessage: document.getElementById('statusMessage')
+};
+
+// Track original settings for preview mode
+let originalSettings = {
+    theme: null,
+    language: null,
+    userId: '',
+    apiKey: ''
 };
 
 // Initialize options page
@@ -32,6 +41,12 @@ async function initializeOptions() {
 async function loadSettings() {
     try {
         const result = await chrome.storage.sync.get(['brewfatherUserId', 'brewfatherApiKey', 'theme', 'language']);
+        
+        // Store original settings for reversion
+        originalSettings.userId = result.brewfatherUserId || '';
+        originalSettings.apiKey = result.brewfatherApiKey || '';
+        originalSettings.theme = result.theme || 'system';
+        originalSettings.language = result.language || 'system';
         
         if (result.brewfatherUserId) {
             elements.userId.value = result.brewfatherUserId;
@@ -69,6 +84,9 @@ function setupEventListeners() {
     // Test button
     elements.testBtn.addEventListener('click', testConnection);
     
+    // Reset button
+    elements.resetBtn.addEventListener('click', resetToSaved);
+    
     // Input fields - update test button state when values change
     elements.userId.addEventListener('input', updateTestButtonState);
     elements.apiKey.addEventListener('input', updateTestButtonState);
@@ -82,7 +100,7 @@ function setupEventListeners() {
         if (e.key === 'Enter') saveSettings();
     });
     
-    // Language change handler - update UI immediately
+    // Language change handler - preview mode only (don't save until user clicks Save)
     elements.languageSelect.addEventListener('change', async (e) => {
         const newLanguage = e.target.value;
         let targetLanguage = newLanguage;
@@ -92,9 +110,72 @@ function setupEventListeners() {
             targetLanguage = i18n.detectSystemLanguage();
         }
         
-        await i18n.setLanguage(targetLanguage);
+        // Temporarily change language for preview (don't save to storage)
+        const currentLang = i18n.getCurrentLanguage();
+        await i18n.loadTranslations(targetLanguage);
+        i18n.currentLanguage = targetLanguage;
         updateUITranslations();
     });
+    
+    // Handle page unload - revert to original language if not saved
+    window.addEventListener('beforeunload', async () => {
+        await revertToOriginalLanguage();
+    });
+    
+    // Handle visibility change (when user switches tabs/closes)
+    document.addEventListener('visibilitychange', async () => {
+        if (document.hidden) {
+            await revertToOriginalLanguage();
+        }
+    });
+}
+
+// Reset all form fields to saved values
+async function resetToSaved() {
+    try {
+        // Reset form values
+        elements.themeSelect.value = originalSettings.theme;
+        elements.languageSelect.value = originalSettings.language;
+        elements.userId.value = originalSettings.userId;
+        elements.apiKey.value = originalSettings.apiKey;
+        
+        // Reset language to saved version
+        let targetLanguage = originalSettings.language;
+        if (originalSettings.language === 'system') {
+            targetLanguage = i18n.detectSystemLanguage();
+        }
+        
+        await i18n.setLanguage(targetLanguage);
+        updateUITranslations();
+        updateTestButtonState();
+        
+        showStatus(i18n.t('settings.resetSuccess'), 'info');
+    } catch (error) {
+        console.error('Error resetting settings:', error);
+        showStatus(i18n.t('settings.resetError'), 'error');
+    }
+}
+
+// Revert to original language if settings weren't saved
+async function revertToOriginalLanguage() {
+    try {
+        // Check if current language selection matches what's saved in storage
+        const currentSelection = elements.languageSelect.value;
+        
+        if (currentSelection !== originalSettings.language) {
+            // Revert language without saving
+            let targetLanguage = originalSettings.language;
+            
+            if (originalSettings.language === 'system') {
+                targetLanguage = i18n.detectSystemLanguage();
+            }
+            
+            await i18n.loadTranslations(targetLanguage);
+            i18n.currentLanguage = targetLanguage;
+        }
+    } catch (error) {
+        console.error('Error reverting language:', error);
+    }
 }
 
 // Update test button state based on input values
@@ -138,6 +219,15 @@ async function saveSettings() {
             brewfatherUserId: userId,
             brewfatherApiKey: apiKey
         });
+        
+        // Now that language is saved, update the original settings
+        originalSettings.theme = theme;
+        originalSettings.language = language;
+        originalSettings.userId = userId;
+        originalSettings.apiKey = apiKey;
+        
+        // Ensure the saved language is properly applied
+        await i18n.setLanguage(language === 'system' ? i18n.detectSystemLanguage() : language);
         
         showStatus(i18n.t('settings.saveSuccess'), 'success');
         updateTestButtonState();
@@ -348,6 +438,9 @@ function updateUITranslations() {
         }
         if (elements.testBtn) {
             elements.testBtn.textContent = i18n.t('settings.test');
+        }
+        if (elements.resetBtn) {
+            elements.resetBtn.textContent = i18n.t('settings.reset');
         }
         
     } catch (error) {
