@@ -291,13 +291,22 @@ function displayShoppingList(ingredients, substitutions = []) {
     // Group ingredients by type
     const groupedIngredients = groupIngredientsByType(ingredients);
     
-    // Render each group
-    Object.entries(groupedIngredients).forEach(([type, items]) => {
-        if (items.length > 0) {
+    // Define group order (fermentables, hops, yeasts, other)
+    const groupOrder = ['fermentable', 'hop', 'yeast', 'other'];
+    
+    // Render each group in order
+    groupOrder.forEach(type => {
+        const items = groupedIngredients[type];
+        if (items && items.length > 0) {
+            // Sort items alphabetically by name
+            const sortedItems = items.sort((a, b) => 
+                (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase())
+            );
+            
             const groupHeader = createGroupHeader(type);
             elements.ingredientsList.appendChild(groupHeader);
             
-            items.forEach(ingredient => {
+            sortedItems.forEach(ingredient => {
                 const item = createIngredientItem(ingredient);
                 elements.ingredientsList.appendChild(item);
             });
@@ -975,12 +984,21 @@ function exportToText(ingredients) {
     
     const grouped = groupIngredientsByType(ingredients);
     
-    Object.entries(grouped).forEach(([type, items]) => {
-        if (items.length > 0) {
+    // Define group order (fermentables, hops, yeasts, other)
+    const groupOrder = ['fermentable', 'hop', 'yeast', 'other'];
+    
+    groupOrder.forEach(type => {
+        const items = grouped[type];
+        if (items && items.length > 0) {
+            // Sort items alphabetically by name
+            const sortedItems = items.sort((a, b) => 
+                (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase())
+            );
+            
             content += `${getTypeDisplayName(type).replace(/🌾|🌿|🦠|📦/g, '').trim().toUpperCase()}\n`;
             content += '-'.repeat(20) + '\n';
             
-            items.forEach(ingredient => {
+            sortedItems.forEach(ingredient => {
                 const amount = formatAmount(ingredient.amount, ingredient.unit);
                 content += `• ${ingredient.name} - ${amount}\n`;
                 
@@ -1005,15 +1023,30 @@ function exportToText(ingredients) {
 function exportToCSV(ingredients) {
     let content = 'Name,Amount,Unit,Type,Details,Recipes\n';
     
-    ingredients.forEach(ingredient => {
-        const name = escapeCSV(ingredient.name);
-        const amount = ingredient.amount;
-        const unit = escapeCSV(ingredient.unit);
-        const type = escapeCSV(ingredient.type);
-        const details = escapeCSV(getIngredientDetails(ingredient));
-        const recipes = escapeCSV(getRecipeInfo(ingredient));
-        
-        content += `${name},${amount},${unit},${type},${details},${recipes}\n`;
+    const grouped = groupIngredientsByType(ingredients);
+    
+    // Define group order (fermentables, hops, yeasts, other)
+    const groupOrder = ['fermentable', 'hop', 'yeast', 'other'];
+    
+    groupOrder.forEach(type => {
+        const items = grouped[type];
+        if (items && items.length > 0) {
+            // Sort items alphabetically by name
+            const sortedItems = items.sort((a, b) => 
+                (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase())
+            );
+            
+            sortedItems.forEach(ingredient => {
+                const name = escapeCSV(ingredient.name);
+                const amount = ingredient.amount;
+                const unit = escapeCSV(ingredient.unit);
+                const type = escapeCSV(ingredient.type);
+                const details = escapeCSV(getIngredientDetails(ingredient));
+                const recipes = escapeCSV(getRecipeInfo(ingredient));
+                
+                content += `${name},${amount},${unit},${type},${details},${recipes}\n`;
+            });
+        }
     });
     
     return content;
@@ -1063,11 +1096,20 @@ function generatePrintContent(ingredients) {
             <p>Generated: ${new Date().toLocaleDateString()}</p>
     `;
     
-    Object.entries(grouped).forEach(([type, items]) => {
-        if (items.length > 0) {
+    // Define group order (fermentables, hops, yeasts, other)
+    const groupOrder = ['fermentable', 'hop', 'yeast', 'other'];
+    
+    groupOrder.forEach(type => {
+        const items = grouped[type];
+        if (items && items.length > 0) {
+            // Sort items alphabetically by name
+            const sortedItems = items.sort((a, b) => 
+                (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase())
+            );
+            
             html += `<h2>${getTypeDisplayName(type)}</h2>`;
             
-            items.forEach(ingredient => {
+            sortedItems.forEach(ingredient => {
                 const amount = formatAmount(ingredient.amount, ingredient.unit);
                 const details = getIngredientDetails(ingredient);
                 const recipes = getRecipeInfo(ingredient);
