@@ -1,6 +1,10 @@
 // Options script for managing extension settings
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize translations first
+    await i18n.init();
+    
+    // Then initialize the options page
     await initializeOptions();
 });
 
@@ -18,6 +22,7 @@ const elements = {
 // Initialize options page
 async function initializeOptions() {
     await loadSettings();
+    updateUITranslations();
     setupEventListeners();
     updateTestButtonState();
     applyTheme();
@@ -49,7 +54,7 @@ async function loadSettings() {
         }
     } catch (error) {
         console.error('Error loading settings:', error);
-        showStatus('Error loading existing settings', 'error');
+        showStatus(i18n.t('settings.loadError'), 'error');
     }
 }
 
@@ -76,6 +81,20 @@ function setupEventListeners() {
     elements.apiKey.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') saveSettings();
     });
+    
+    // Language change handler - update UI immediately
+    elements.languageSelect.addEventListener('change', async (e) => {
+        const newLanguage = e.target.value;
+        let targetLanguage = newLanguage;
+        
+        // Handle "system" selection
+        if (newLanguage === 'system') {
+            targetLanguage = i18n.detectSystemLanguage();
+        }
+        
+        await i18n.setLanguage(targetLanguage);
+        updateUITranslations();
+    });
 }
 
 // Update test button state based on input values
@@ -95,20 +114,20 @@ async function saveSettings() {
     
     // Validate inputs
     if (!userId) {
-        showStatus('Please enter your Brewfather User ID', 'error');
+        showStatus(i18n.t('settings.validationUserId'), 'error');
         elements.userId.focus();
         return;
     }
     
     if (!apiKey) {
-        showStatus('Please enter your Brewfather API Key', 'error');
+        showStatus(i18n.t('settings.validationApiKey'), 'error');
         elements.apiKey.focus();
         return;
     }
     
     // Show saving state
     const originalText = elements.saveBtn.textContent;
-    elements.saveBtn.textContent = '💾 Saving...';
+    elements.saveBtn.textContent = i18n.t('settings.saving');
     elements.saveBtn.disabled = true;
     
     try {
@@ -120,7 +139,7 @@ async function saveSettings() {
             brewfatherApiKey: apiKey
         });
         
-        showStatus('Settings saved successfully! 🎉', 'success');
+        showStatus(i18n.t('settings.saveSuccess'), 'success');
         updateTestButtonState();
         
         // Test connection automatically after saving
@@ -132,7 +151,7 @@ async function saveSettings() {
         
     } catch (error) {
         console.error('Error saving settings:', error);
-        showStatus('Failed to save settings. Please try again.', 'error');
+        showStatus(i18n.t('settings.saveError'), 'error');
     } finally {
         elements.saveBtn.textContent = originalText;
         elements.saveBtn.disabled = false;
@@ -151,7 +170,7 @@ async function testConnection() {
     
     // Show testing state
     const originalText = elements.testBtn.textContent;
-    elements.testBtn.textContent = '🧪 Testing...';
+    elements.testBtn.textContent = i18n.t('settings.testing');
     elements.testBtn.disabled = true;
     
     try {
@@ -164,24 +183,27 @@ async function testConnection() {
         });
         
         if (response.ok) {
-            showStatus('✅ Connection successful! Your credentials are working correctly.', 'success');
+            const data = await response.json();
+            const count = data.length || 0;
+            const plural = count !== 1 ? 's' : '';
+            showStatus(i18n.t('settings.testSuccess', { count, plural }), 'success');
         } else if (response.status === 401) {
-            showStatus('❌ Authentication failed. Please check your User ID and API Key.', 'error');
+            showStatus(i18n.t('settings.testError', { error: 'Authentication failed. Please check your User ID and API Key.' }), 'error');
         } else if (response.status === 403) {
-            showStatus('❌ Access denied. Make sure your API key has "Read Recipes" scope enabled.', 'error');
+            showStatus(i18n.t('settings.testError', { error: 'Access denied. Make sure your API key has "Read Recipes" scope enabled.' }), 'error');
         } else if (response.status === 429) {
-            showStatus('⚠️ Rate limit exceeded. Your credentials are correct but you\'ve made too many requests. Try again later.', 'info');
+            showStatus(i18n.t('settings.testError', { error: 'Rate limit exceeded. Your credentials are correct but you\'ve made too many requests. Try again later.' }), 'info');
         } else {
-            showStatus(`❌ Connection failed with status ${response.status}. Please try again.`, 'error');
+            showStatus(i18n.t('settings.testError', { error: `Connection failed with status ${response.status}. Please try again.` }), 'error');
         }
         
     } catch (error) {
         console.error('Error testing connection:', error);
         
         if (error.name === 'TypeError' && error.message.includes('fetch')) {
-            showStatus('❌ Network error. Please check your internet connection and try again.', 'error');
+            showStatus(i18n.t('settings.testError', { error: 'Network error. Please check your internet connection and try again.' }), 'error');
         } else {
-            showStatus('❌ Connection test failed. Please check your credentials and try again.', 'error');
+            showStatus(i18n.t('settings.testErrorGeneric'), 'error');
         }
     } finally {
         elements.testBtn.textContent = originalText;
@@ -267,4 +289,118 @@ if (window.matchMedia) {
             applyTheme();
         }
     });
+}
+
+// Update UI with current translations
+function updateUITranslations() {
+    try {
+        // Update page title
+        document.title = i18n.t('settings.title');
+        
+        // Update header
+        const headerTitle = document.querySelector('.options-header h1');
+        if (headerTitle) {
+            headerTitle.textContent = i18n.t('settings.headerTitle');
+        }
+        
+        const headerDescription = document.querySelector('.options-header p');
+        if (headerDescription) {
+            headerDescription.textContent = i18n.t('settings.headerDescription');
+        }
+        
+        // Update section headers
+        updateTextContent('h2', 'settings.themeSection', 0); // First h2
+        updateTextContent('h2', 'settings.languageSection', 1); // Second h2
+        updateTextContent('h2', 'settings.apiSection', 2); // Third h2
+        
+        // Update theme section
+        updateLabelText('themeSelect', 'settings.themeLabel');
+        updateSelectOptions('themeSelect', {
+            'system': 'settings.themeSystem',
+            'light': 'settings.themeLight',
+            'dark': 'settings.themeDark'
+        });
+        updateHelpText('themeSelect', 'settings.themeHelp');
+        
+        // Update language section
+        updateLabelText('languageSelect', 'settings.languageLabel');
+        updateSelectOptions('languageSelect', {
+            'system': 'settings.languageSystem',
+            'en': 'English',
+            'nl': 'Nederlands',
+            'de': 'Deutsch',
+            'fr': 'Français'
+        });
+        updateHelpText('languageSelect', 'settings.languageHelp');
+        
+        // Update API section
+        updateLabelText('userId', 'settings.userIdLabel');
+        updatePlaceholder('userId', 'settings.userIdPlaceholder');
+        updateHelpText('userId', 'settings.userIdHelp');
+        
+        updateLabelText('apiKey', 'settings.apiKeyLabel');
+        updatePlaceholder('apiKey', 'settings.apiKeyPlaceholder');
+        updateHelpText('apiKey', 'settings.apiKeyHelp');
+        
+        // Update buttons
+        if (elements.saveBtn) {
+            elements.saveBtn.textContent = i18n.t('settings.save');
+        }
+        if (elements.testBtn) {
+            elements.testBtn.textContent = i18n.t('settings.test');
+        }
+        
+    } catch (error) {
+        console.error('Error updating UI translations:', error);
+    }
+}
+
+// Helper functions for updating UI elements
+function updateTextContent(selector, translationKey, index = null) {
+    const elements = document.querySelectorAll(selector);
+    const element = index !== null ? elements[index] : elements[0];
+    if (element) {
+        element.textContent = i18n.t(translationKey);
+    }
+}
+
+function updateLabelText(inputId, translationKey) {
+    const label = document.querySelector(`label[for="${inputId}"]`);
+    if (label) {
+        label.textContent = i18n.t(translationKey);
+    }
+}
+
+function updateSelectOptions(selectId, optionsMap) {
+    const select = document.getElementById(selectId);
+    if (select) {
+        const options = select.querySelectorAll('option');
+        options.forEach(option => {
+            const key = optionsMap[option.value];
+            if (key) {
+                if (key.startsWith('settings.')) {
+                    option.textContent = i18n.t(key);
+                } else {
+                    option.textContent = key; // For language names like "English"
+                }
+            }
+        });
+    }
+}
+
+function updatePlaceholder(inputId, translationKey) {
+    const input = document.getElementById(inputId);
+    if (input) {
+        input.placeholder = i18n.t(translationKey);
+    }
+}
+
+function updateHelpText(inputId, translationKey) {
+    const input = document.getElementById(inputId);
+    if (input) {
+        const helpText = input.parentElement.querySelector('.help-text');
+        if (helpText) {
+            helpText.textContent = i18n.t(translationKey);
+        }
+    }
 }
