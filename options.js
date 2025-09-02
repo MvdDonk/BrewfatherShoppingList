@@ -35,6 +35,16 @@ async function initializeOptions() {
     setupEventListeners();
     updateTestButtonState();
     applyTheme();
+    
+    // Check for system language changes and show warnings if needed
+    await checkSystemLanguageStatus();
+    
+    // Set up periodic checking for system language changes (every 30 seconds)
+    if (elements.languageSelect.value === 'system' || originalSettings.language === 'system') {
+        setInterval(async () => {
+            await checkSystemLanguageStatus();
+        }, 30000); // Check every 30 seconds
+    }
 }
 
 // Load existing settings
@@ -56,17 +66,9 @@ async function loadSettings() {
             elements.apiKey.value = result.brewfatherApiKey;
         }
         
-        if (result.theme) {
-            elements.themeSelect.value = result.theme;
-        } else {
-            elements.themeSelect.value = 'system'; // Default to system preference
-        }
-        
-        if (result.language) {
-            elements.languageSelect.value = result.language;
-        } else {
-            elements.languageSelect.value = 'system'; // Default to system language
-        }
+        // Set form values to saved settings (defaults to 'system' if not specified)
+        elements.themeSelect.value = originalSettings.theme;
+        elements.languageSelect.value = originalSettings.language;
     } catch (error) {
         console.error('Error loading settings:', error);
         showStatus(i18n.t('settings.loadError'), 'error');
@@ -103,18 +105,17 @@ function setupEventListeners() {
     // Language change handler - preview mode only (don't save until user clicks Save)
     elements.languageSelect.addEventListener('change', async (e) => {
         const newLanguage = e.target.value;
-        let targetLanguage = newLanguage;
-        
-        // Handle "system" selection
-        if (newLanguage === 'system') {
-            targetLanguage = i18n.detectSystemLanguage();
-        }
         
         // Temporarily change language for preview (don't save to storage)
         const currentLang = i18n.getCurrentLanguage();
-        await i18n.loadTranslations(targetLanguage);
-        i18n.currentLanguage = targetLanguage;
+        await i18n.setLanguage(newLanguage, false); // false = don't save preference
         updateUITranslations();
+        
+        // Show warning if system language is not supported and user selected system
+        if (newLanguage === 'system' && i18n.isSystemLanguageUnsupported()) {
+            const systemLang = i18n.getSystemLanguage();
+            showStatus(i18n.t('settings.systemLanguageUnsupported', { systemLanguage: systemLang }), 'info');
+        }
     });
     
     // Handle page unload - revert all unsaved changes
@@ -140,12 +141,7 @@ async function resetToSaved() {
         elements.apiKey.value = originalSettings.apiKey;
         
         // Reset language to saved version
-        let targetLanguage = originalSettings.language;
-        if (originalSettings.language === 'system') {
-            targetLanguage = i18n.detectSystemLanguage();
-        }
-        
-        await i18n.setLanguage(targetLanguage);
+        await i18n.setLanguage(originalSettings.language, false); // Don't save during reset
         updateUITranslations();
         
         // Reset theme to saved version
@@ -166,14 +162,7 @@ async function revertToOriginalSettings() {
         // Revert language if changed
         const currentLanguageSelection = elements.languageSelect.value;
         if (currentLanguageSelection !== originalSettings.language) {
-            let targetLanguage = originalSettings.language;
-            
-            if (originalSettings.language === 'system') {
-                targetLanguage = i18n.detectSystemLanguage();
-            }
-            
-            await i18n.loadTranslations(targetLanguage);
-            i18n.currentLanguage = targetLanguage;
+            await i18n.setLanguage(originalSettings.language, false); // Don't save during revert
         }
         
         // Revert theme if changed
@@ -194,6 +183,29 @@ async function revertToOriginalSettings() {
         
     } catch (error) {
         console.error('Error reverting settings:', error);
+    }
+}
+
+// Check system language status and show appropriate messages
+async function checkSystemLanguageStatus() {
+    // Check if system language changed
+    const changeResult = await i18n.checkSystemLanguageChange();
+    
+    if (changeResult.changed) {
+        if (changeResult.supported) {
+            // System language changed to a supported language
+            showStatus(i18n.t('settings.systemLanguageChanged', { newLanguage: i18n.getLanguageDisplayName(changeResult.language) }), 'success');
+            updateUITranslations(); // Update UI with new language
+        } else {
+            // System language changed but is not supported
+            if (elements.languageSelect.value === 'system') {
+                showStatus(i18n.t('settings.systemLanguageUnsupported', { systemLanguage: changeResult.language }), 'info');
+            }
+        }
+    } else if (elements.languageSelect.value === 'system' && i18n.isSystemLanguageUnsupported()) {
+        // Show warning on page load if user has system selected but it's unsupported
+        const systemLang = i18n.getSystemLanguage();
+        showStatus(i18n.t('settings.systemLanguageUnsupported', { systemLanguage: systemLang }), 'info');
     }
 }
 
@@ -246,7 +258,7 @@ async function saveSettings() {
         originalSettings.apiKey = apiKey;
         
         // Ensure the saved language is properly applied
-        await i18n.setLanguage(language === 'system' ? i18n.detectSystemLanguage() : language);
+        await i18n.setLanguage(language, true); // Save the preference (could be 'system' or specific language)
         
         showStatus(i18n.t('settings.saveSuccess'), 'success');
         updateTestButtonState();

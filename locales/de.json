@@ -92,6 +92,8 @@
     "languageLabel": "Sprache",
     "languageSystem": "Systemsprache folgen",
     "languageHelp": "Wählen Sie Ihre bevorzugte Sprache. \"Systemsprache folgen\" verwendet automatisch Ihre Systemsprache, falls unterstützt.",
+    "systemLanguageUnsupported": "⚠️ Ihre Systemsprache ({{systemLanguage}}) wird nicht unterstützt. Englisch wird als Fallback verwendet.",
+    "systemLanguageChanged": "✅ Systemsprache zu {{newLanguage}} geändert. Benutzeroberfläche automatisch aktualisiert.",
     "apiSection": "🔗 API-Konfiguration",
     "userIdLabel": "Brewfather Benutzer-ID",
     "userIdPlaceholder": "Geben Sie Ihre Brewfather Benutzer-ID ein",

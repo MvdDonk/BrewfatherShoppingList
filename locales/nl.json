@@ -1,7 +1,7 @@
 {
   "appName": "Brewfather Boodschappenlijst",
   "menu": {
-    "addToList": "Toevoegen aan Lijst",
+    "addToList": "Toevoegen aan Boodschappenlijst",
     "addToListDescription": "Voeg huidige recept toe aan je boodschappenlijst",
     "addToListDisabled": "Ga eerst naar een receptpagina",
     "addToListStandalone": "Gebruik de browser extensie popup om recepten toe te voegen (niet beschikbaar in dit venster)",
@@ -91,7 +91,9 @@
     "languageSection": "🌐 Taalinstellingen",
     "languageLabel": "Taal",
     "languageSystem": "Volg Systeemtaal",
-    "languageHelp": "Kies je gewenste taal. \"Volg Systeemtaal\" zal automatisch je systeemtaal gebruiken indien ondersteund.",
+    "languageHelp": "Kies je gewenste taal. \"Volg Systeemtaal\" gebruikt automatisch je systeemtaal als deze ondersteund wordt.",
+    "systemLanguageUnsupported": "⚠️ Je systeemtaal ({{systemLanguage}}) wordt niet ondersteund. Engels wordt gebruikt als alternatief.",
+    "systemLanguageChanged": "✅ Systeemtaal gewijzigd naar {{newLanguage}}. Interface automatisch bijgewerkt.",
     "apiSection": "🔗 API Configuratie",
     "userIdLabel": "Brewfather Gebruikers-ID",
     "userIdPlaceholder": "Voer je Brewfather Gebruikers-ID in",
