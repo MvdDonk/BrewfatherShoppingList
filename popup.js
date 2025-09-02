@@ -9,6 +9,7 @@ const elements = {
     // Views
     mainMenu: document.getElementById('mainMenu'),
     shoppingListView: document.getElementById('shoppingListView'),
+    substitutionsView: document.getElementById('substitutionsView'),
     loading: document.getElementById('loadingIndicator'),
     emptyState: document.getElementById('emptyState'),
     errorState: document.getElementById('errorState'),
@@ -19,11 +20,23 @@ const elements = {
     ingredientsList: document.getElementById('ingredientsList'),
     exportModal: document.getElementById('exportModal'),
     
+    // Substitutions elements
+    substitutionsContent: document.getElementById('substitutionsContent'),
+    substitutionsLoadingIndicator: document.getElementById('substitutionsLoadingIndicator'),
+    substitutionsEmptyState: document.getElementById('substitutionsEmptyState'),
+    substitutionsList: document.getElementById('substitutionsList'),
+    applySubstitutionsBtn: document.getElementById('applySubstitutionsBtn'),
+    substitutionsCount: document.getElementById('substitutionsCount'),
+    substitutionsBadge: document.getElementById('substitutionsBadge'),
+    
     // Menu buttons
     addToListBtn: document.getElementById('addToListBtn'),
     showShoppingListBtn: document.getElementById('showShoppingListBtn'),
+    showSubstitutionsBtn: document.getElementById('showSubstitutionsBtn'),
     settingsMenuBtn: document.getElementById('settingsMenuBtn'),
     backToMenuBtn: document.getElementById('backToMenuBtn'),
+    backToMenuFromSubstitutionsBtn: document.getElementById('backToMenuFromSubstitutionsBtn'),
+    substitutionsHeaderBtn: document.getElementById('substitutionsHeaderBtn'),
     
     // Action buttons
     retryBtn: document.getElementById('retryBtn'),
@@ -100,10 +113,18 @@ function showShoppingListView() {
     loadShoppingList();
 }
 
+// Show substitutions view
+function showSubstitutionsView() {
+    hideAllViews();
+    elements.substitutionsView.style.display = 'flex';
+    loadSubstitutions();
+}
+
 // Hide all views
 function hideAllViews() {
     elements.mainMenu.style.display = 'none';
     elements.shoppingListView.style.display = 'none';
+    elements.substitutionsView.style.display = 'none';
     elements.configAlert.style.display = 'none';
 }
 
@@ -181,14 +202,8 @@ function displayShoppingList(ingredients, substitutions = []) {
     // Update item count
     elements.itemCount.textContent = `${ingredients.length} item${ingredients.length !== 1 ? 's' : ''}`;
     
-    // Show/hide substitutions section
-    const substitutionsSection = document.getElementById('substitutionsSection');
-    if (substitutions && substitutions.length > 0) {
-        displaySubstitutions(substitutions);
-        substitutionsSection.style.display = 'block';
-    } else {
-        substitutionsSection.style.display = 'none';
-    }
+    // Update substitution counts but don't display them inline
+    updateSubstitutionCounts(substitutions);
     
     // Clear and populate ingredients list
     elements.ingredientsList.innerHTML = '';
@@ -210,6 +225,141 @@ function displayShoppingList(ingredients, substitutions = []) {
     });
     
     elements.content.style.display = 'block';
+}
+
+// Update substitution counts and button visibility
+function updateSubstitutionCounts(substitutions) {
+    const count = substitutions ? substitutions.length : 0;
+    
+    // Update menu item count
+    if (elements.substitutionsCount) {
+        elements.substitutionsCount.textContent = count;
+    }
+    
+    // Update header badge
+    if (elements.substitutionsBadge) {
+        elements.substitutionsBadge.textContent = count;
+    }
+    
+    // Show/hide buttons based on substitution availability
+    const hasSubstitutions = count > 0;
+    
+    if (elements.showSubstitutionsBtn) {
+        elements.showSubstitutionsBtn.style.display = hasSubstitutions ? 'flex' : 'none';
+    }
+    
+    if (elements.substitutionsHeaderBtn) {
+        elements.substitutionsHeaderBtn.style.display = hasSubstitutions ? 'block' : 'none';
+    }
+}
+
+// Load substitutions view
+async function loadSubstitutions() {
+    try {
+        // Show loading state
+        elements.substitutionsLoadingIndicator.style.display = 'block';
+        elements.substitutionsContent.style.display = 'none';
+        elements.substitutionsEmptyState.style.display = 'none';
+        
+        // Get substitutions from background script
+        const response = await chrome.runtime.sendMessage({ action: 'getSubstitutions' });
+        
+        if (response.success) {
+            const substitutions = response.data || [];
+            
+            // Hide loading
+            elements.substitutionsLoadingIndicator.style.display = 'none';
+            
+            if (substitutions.length === 0) {
+                // Show empty state
+                elements.substitutionsEmptyState.style.display = 'block';
+            } else {
+                // Display substitutions
+                displaySubstitutionsInView(substitutions);
+                elements.substitutionsContent.style.display = 'block';
+            }
+        } else {
+            throw new Error(response.error || 'Failed to load substitutions');
+        }
+    } catch (error) {
+        console.error('Error loading substitutions:', error);
+        elements.substitutionsLoadingIndicator.style.display = 'none';
+        elements.substitutionsEmptyState.style.display = 'block';
+        
+        // Update empty state to show error
+        const emptyIcon = elements.substitutionsEmptyState.querySelector('.empty-icon');
+        const emptyTitle = elements.substitutionsEmptyState.querySelector('h3');
+        const emptyText = elements.substitutionsEmptyState.querySelector('p');
+        
+        if (emptyIcon) emptyIcon.textContent = '⚠️';
+        if (emptyTitle) emptyTitle.textContent = 'Error loading substitutions';
+        if (emptyText) emptyText.textContent = 'Please try again later.';
+    }
+}
+
+// Display substitutions in the dedicated view
+function displaySubstitutionsInView(substitutions) {
+    elements.substitutionsList.innerHTML = '';
+    
+    substitutions.forEach(substitution => {
+        const substitutionItem = createSubstitutionItem(substitution);
+        elements.substitutionsList.appendChild(substitutionItem);
+    });
+    
+    // Show apply button if there are substitutions
+    elements.applySubstitutionsBtn.style.display = substitutions.length > 0 ? 'block' : 'none';
+    
+    // Add event listener for apply all button
+    elements.applySubstitutionsBtn.onclick = applyAllSelectedSubstitutions;
+}
+
+// Apply all selected substitutions
+async function applyAllSelectedSubstitutions() {
+    try {
+        const substitutions = [];
+        const substitutionItems = elements.substitutionsList.querySelectorAll('.substitution-item');
+        
+        substitutionItems.forEach(item => {
+            const substitutionId = item.dataset.substitutionId;
+            const selectedRadio = item.querySelector(`input[name="substitution_${substitutionId}"]:checked`);
+            
+            if (selectedRadio && substitutionId) {
+                substitutions.push({
+                    substitutionId: substitutionId,
+                    chosenIngredientId: selectedRadio.value
+                });
+            }
+        });
+        
+        if (substitutions.length === 0) {
+            alert('Please select ingredients for substitution.');
+            return;
+        }
+        
+        // Disable button during processing
+        elements.applySubstitutionsBtn.disabled = true;
+        elements.applySubstitutionsBtn.textContent = 'Applying...';
+        
+        // Apply all substitutions
+        const response = await chrome.runtime.sendMessage({
+            action: 'applyMultipleSubstitutions',
+            substitutions: substitutions
+        });
+        
+        if (response.success) {
+            // Go back to shopping list to show updated results
+            showShoppingListView();
+        } else {
+            throw new Error(response.error || 'Failed to apply substitutions');
+        }
+    } catch (error) {
+        console.error('Error applying substitutions:', error);
+        alert('Failed to apply substitutions. Please try again.');
+    } finally {
+        // Re-enable button
+        elements.applySubstitutionsBtn.disabled = false;
+        elements.applySubstitutionsBtn.textContent = 'Apply Selected Substitutions';
+    }
 }
 
 // Display substitution suggestions
@@ -251,24 +401,7 @@ function createSubstitutionItem(substitution) {
                 </label>
             `).join('')}
         </div>
-        <div class="substitution-actions">
-            <button class="btn btn-apply btn-small" data-substitution-id="${substitution.id}">
-                Use Selected Ingredient
-            </button>
-            <button class="btn btn-secondary btn-small" onclick="dismissSubstitution('${substitution.id}')">
-                Keep Separate
-            </button>
-        </div>
     `;
-    
-    // Add event listeners
-    const applyBtn = item.querySelector('.btn-apply');
-    applyBtn.addEventListener('click', () => {
-        const selectedRadio = item.querySelector(`input[name="substitution_${substitution.id}"]:checked`);
-        if (selectedRadio) {
-            applySubstitution(substitution.id, selectedRadio.value);
-        }
-    });
     
     // Add click handlers for radio button labels
     const options = item.querySelectorAll('.substitution-option');
@@ -492,12 +625,24 @@ function setupEventListeners() {
         showShoppingListView();
     });
     
+    elements.showSubstitutionsBtn.addEventListener('click', () => {
+        showSubstitutionsView();
+    });
+    
     elements.settingsMenuBtn.addEventListener('click', () => {
         chrome.runtime.openOptionsPage();
     });
     
     elements.backToMenuBtn.addEventListener('click', () => {
         showMainMenu();
+    });
+    
+    elements.backToMenuFromSubstitutionsBtn.addEventListener('click', () => {
+        showMainMenu();
+    });
+    
+    elements.substitutionsHeaderBtn.addEventListener('click', () => {
+        showSubstitutionsView();
     });
     
     // Pop out button

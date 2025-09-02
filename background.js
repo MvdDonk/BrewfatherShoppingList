@@ -126,6 +126,16 @@ function extractIngredients(recipe) {
 
 // Check if two fermentables are interchangeable
 function areInterchangeable(fermentable1, fermentable2) {
+    // Never combine ingredients from the same recipe
+    if (fermentable1.recipeIds && fermentable2.recipeIds) {
+        const hasCommonRecipe = fermentable1.recipeIds.some(recipeId => 
+            fermentable2.recipeIds.includes(recipeId)
+        );
+        if (hasCommonRecipe) {
+            return false;
+        }
+    }
+    
     // Must have the same grain category
     if (fermentable1.grainCategory !== fermentable2.grainCategory) {
         return false;
@@ -318,6 +328,28 @@ async function applySubstitution(substitutionId, chosenIngredientId) {
     };
 }
 
+// Apply multiple substitutions at once
+async function applyMultipleSubstitutions(substitutionsToApply) {
+    try {
+        // Process all substitutions sequentially to avoid conflicts
+        for (const substitution of substitutionsToApply) {
+            await applySubstitution(substitution.substitutionId, substitution.chosenIngredientId);
+        }
+        
+        // Get final state
+        const shoppingList = await getShoppingList();
+        const substitutions = await getSubstitutions();
+        
+        return {
+            shoppingList: shoppingList,
+            substitutions: substitutions
+        };
+    } catch (error) {
+        console.error('Error applying multiple substitutions:', error);
+        throw error;
+    }
+}
+
 // Generate new substitutions when shopping list changes
 async function updateSubstitutions() {
     const shoppingList = await getShoppingList();
@@ -389,6 +421,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     
     if (message.action === 'applySubstitution') {
         applySubstitution(message.substitutionId, message.chosenIngredientId)
+            .then(result => sendResponse({ success: true, data: result }))
+            .catch(error => sendResponse({ success: false, error: error.message }));
+        return true;
+    }
+    
+    if (message.action === 'applyMultipleSubstitutions') {
+        applyMultipleSubstitutions(message.substitutions)
             .then(result => sendResponse({ success: true, data: result }))
             .catch(error => sendResponse({ success: false, error: error.message }));
         return true;

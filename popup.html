@@ -31,6 +31,14 @@
                     </div>
                 </div>
                 
+                <div class="menu-item" id="showSubstitutionsBtn" style="display: none;">
+                    <div class="menu-icon">🔄</div>
+                    <div class="menu-text">
+                        <h3>Ingredient Substitutions</h3>
+                        <p>Combine similar ingredients (<span id="substitutionsCount">0</span> available)</p>
+                    </div>
+                </div>
+                
                 <div class="menu-item" id="settingsMenuBtn">
                     <div class="menu-icon">⚙️</div>
                     <div class="menu-text">
@@ -46,7 +54,13 @@
             <header class="popup-header shopping-list-header">
                 <button id="backToMenuBtn" class="btn btn-icon" title="Back to Menu">←</button>
                 <h1>🍺 Shopping List</h1>
-                <button id="popOutBtn" class="btn btn-icon" title="Pop out to new window">↗️</button>
+                <div class="header-actions">
+                    <button id="substitutionsHeaderBtn" class="btn btn-icon substitutions-badge" title="View Substitutions" style="display: none;">
+                        🔄
+                        <span class="badge" id="substitutionsBadge">0</span>
+                    </button>
+                    <button id="popOutBtn" class="btn btn-icon" title="Pop out to new window">↗️</button>
+                </div>
             </header>
 
             <div id="loadingIndicator" class="loading">
@@ -76,20 +90,43 @@
                     </div>
                 </div>
 
-                <!-- Substitution Suggestions Section -->
-                <div id="substitutionsSection" style="display: none;">
-                    <div class="substitutions-header">
-                        <h3>🔄 Ingredient Substitutions</h3>
-                        <p>You have interchangeable ingredients that can be combined:</p>
-                    </div>
-                    <div id="substitutionsList" class="substitutions-list">
-                        <!-- Substitution suggestions will be populated here -->
-                    </div>
-                </div>
-
                 <div id="ingredientsList" class="ingredients-list">
                     <!-- Ingredients will be populated here -->
                 </div>
+            </div>
+        </div>
+
+        <!-- Substitutions View -->
+        <div id="substitutionsView" style="display: none;">
+            <header class="popup-header">
+                <button id="backToMenuFromSubstitutionsBtn" class="btn btn-icon" title="Back to Menu">←</button>
+                <h1>🔄 Ingredient Substitutions</h1>
+            </header>
+
+            <div id="substitutionsLoadingIndicator" class="loading">
+                <div class="spinner"></div>
+                <p>Loading substitutions...</p>
+            </div>
+
+            <div id="substitutionsEmptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">🔄</div>
+                <h3>No substitutions available</h3>
+                <p>Add more ingredients to your shopping list to see substitution suggestions!</p>
+            </div>
+
+            <div id="substitutionsContent" style="display: none;">
+                <div class="substitutions-header">
+                    <h3>Combine Similar Ingredients</h3>
+                    <p>Select your preferred ingredients to consolidate your shopping list:</p>
+                </div>
+                
+                <div id="substitutionsList" class="substitutions-list">
+                    <!-- Substitution suggestions will be populated here -->
+                </div>
+                
+                <button id="applySubstitutionsBtn" class="apply-substitutions-btn" style="display: none;">
+                    Apply Selected Substitutions
+                </button>
             </div>
         </div>
 

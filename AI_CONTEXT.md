@@ -274,7 +274,53 @@ See `recipe.json` file for complete example. Key ingredients structure:
 - [ ] Export formats are usable
 - [ ] Error messages are helpful
 
-## 💾 Backup & Recovery
+## � Common Issues & Solutions
+
+### CSS Layout Problems
+
+#### Issue: Headers Appearing on Left Side Instead of Top
+**Problem**: When adding new views to the popup, headers may appear positioned incorrectly (on the left side instead of at the top of the view).
+
+**Root Cause**: Missing CSS flex layout rules for new view containers.
+
+**Solution**: Every new view container must have the following CSS rules:
+```css
+#newViewId {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+```
+
+**Examples Fixed**:
+- `#shoppingListView` - Added proper flex layout
+- `#substitutionsView` - Added proper flex layout
+
+**Prevention**: When creating new views, ALWAYS add the view-specific CSS with flex layout rules immediately after adding the HTML structure.
+
+### Ingredient Substitution Logic
+
+#### Issue: Ingredients from Same Recipe Being Combined
+**Problem**: The substitution feature was incorrectly suggesting to combine similar ingredients that came from the same recipe.
+
+**Root Cause**: The `areInterchangeable()` function didn't check recipe origins.
+
+**Solution**: Updated `areInterchangeable()` function to check `recipeIds` arrays and return `false` if ingredients share any common recipe ID:
+```javascript
+// Never combine ingredients from the same recipe
+if (fermentable1.recipeIds && fermentable2.recipeIds) {
+    const hasCommonRecipe = fermentable1.recipeIds.some(recipeId => 
+        fermentable2.recipeIds.includes(recipeId)
+    );
+    if (hasCommonRecipe) {
+        return false;
+    }
+}
+```
+
+**Prevention**: Always consider recipe context when implementing ingredient combination logic.
+
+## �💾 Backup & Recovery
 
 ### Critical Files for Backup
 - All source files in project directory
