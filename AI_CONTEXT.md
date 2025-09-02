@@ -6,7 +6,46 @@
 
 ## 📋 Project Overview
 
-This document contains all the context, decisions, and implementation details for the Brewfather Shopping List browser extension. This is intended for future AI assistants working on this project.
+This document contains all the context, decisions, and**Prevention**: Always consider recipe context when implementing ingredient combination logic.
+
+### Pop-out Window Implementation
+
+#### Issue: Static Pop-out Window vs Dynamic Extension Behavior
+**Problem**: Original pop-out functionality created a static HTML page that didn't have the same interactive features as the popup extension.
+
+**Root Cause**: The pop-out was generating static HTML instead of using the same JavaScript logic as the popup.
+
+**Solution**: Created a dedicated `standalone.html` file that includes the same structure and JavaScript as the popup but:
+1. Detects context using `data-context="standalone"` attribute and window properties
+2. Automatically shows shopping list view instead of main menu
+3. Disables functionality that requires tab access (adding recipes)
+4. Includes standalone-specific controls (refresh, close buttons)
+5. Uses `chrome.runtime.getURL('standalone.html')` to open the full extension interface
+
+**Key Implementation Details**:
+```javascript
+// Context detection
+const isStandalone = document.body.dataset.context === 'standalone' || 
+                    window.location.protocol === 'chrome-extension:' && 
+                    window.opener === null && 
+                    window.parent === window;
+
+// Conditional behavior in popup.js
+if (isStandalone) {
+    setupEventListeners();
+    showShoppingListView();
+    return;
+}
+```
+
+**Files Modified**:
+- `standalone.html` - New file with full extension interface
+- `popup.js` - Added context detection and conditional behavior
+- `manifest.json` - No changes needed (file automatically accessible)
+
+**Prevention**: Always use the same JavaScript logic for both popup and standalone modes, only adjusting behavior based on context detection.
+
+## 💾 Backup & Recoveryplementation details for the Brewfather Shopping List browser extension. This is intended for future AI assistants working on this project.
 
 ### Purpose
 Create a Microsoft Edge browser extension that allows users to generate shopping lists from Brewfather brewing recipes by integrating with the Brewfather API.

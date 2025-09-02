@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Brewfather Shopping List</title>
+    <link rel="stylesheet" href="popup.css">
+    <style>
+        /* Standalone window specific styles */
+        body {
+            min-width: 600px;
+            min-height: 400px;
+            max-width: none;
+            max-height: none;
+        }
+        
+        .popup-container {
+            min-height: 100vh;
+        }
+        
+        /* Hide pop-out button in standalone mode */
+        #popOutBtn {
+            display: none !important;
+        }
+        
+        /* Adjust header for standalone */
+        .popup-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        /* Better scrolling for standalone */
+        .ingredients-list,
+        .substitutions-list {
+            max-height: none;
+        }
+        
+        /* Window controls for standalone */
+        .standalone-controls {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            gap: 8px;
+            z-index: 101;
+        }
+        
+        .standalone-controls .btn {
+            min-width: auto;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body data-context="standalone">
+    <div class="standalone-controls">
+        <button id="refreshBtn" class="btn btn-secondary" title="Refresh">🔄</button>
+        <button id="closeBtn" class="btn btn-secondary" title="Close">✕</button>
+    </div>
+    
+    <div class="popup-container">
+        <!-- Main Menu View -->
+        <div id="mainMenu" class="main-menu">
+            <header class="popup-header">
+                <h1>🍺 Brewfather Shopping List</h1>
+            </header>
+            
+            <div class="menu-content">
+                <div class="menu-item" id="addToListBtn">
+                    <div class="menu-icon">🛒</div>
+                    <div class="menu-text">
+                        <h3>Add to Shopping List</h3>
+                        <p>Add current recipe to your shopping list</p>
+                    </div>
+                </div>
+                
+                <div class="menu-item" id="showShoppingListBtn">
+                    <div class="menu-icon">📋</div>
+                    <div class="menu-text">
+                        <h3>Show Shopping List</h3>
+                        <p>View and manage your shopping list</p>
+                    </div>
+                </div>
+                
+                <div class="menu-item" id="showSubstitutionsBtn" style="display: none;">
+                    <div class="menu-icon">🔄</div>
+                    <div class="menu-text">
+                        <h3>Ingredient Substitutions</h3>
+                        <p>Combine similar ingredients (<span id="substitutionsCount">0</span> available)</p>
+                    </div>
+                </div>
+                
+                <div class="menu-item" id="settingsMenuBtn">
+                    <div class="menu-icon">⚙️</div>
+                    <div class="menu-text">
+                        <h3>Settings</h3>
+                        <p>Configure Brewfather credentials</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shopping List View -->
+        <div id="shoppingListView" style="display: none;">
+            <header class="popup-header shopping-list-header">
+                <button id="backToMenuBtn" class="btn btn-icon" title="Back to Menu">←</button>
+                <h1>🍺 Shopping List</h1>
+                <div class="header-actions">
+                    <button id="substitutionsHeaderBtn" class="btn btn-icon substitutions-badge" title="View Substitutions" style="display: none;">
+                        🔄
+                        <span class="badge" id="substitutionsBadge">0</span>
+                    </button>
+                    <button id="popOutBtn" class="btn btn-icon" title="Pop out to new window">↗️</button>
+                </div>
+            </header>
+
+            <div id="loadingIndicator" class="loading">
+                <div class="spinner"></div>
+                <p>Loading shopping list...</p>
+            </div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">🛒</div>
+                <h3>No ingredients yet</h3>
+                <p>Visit a Brewfather recipe page and click "Add to Shopping List" to get started!</p>
+            </div>
+
+            <div id="errorState" class="error-state" style="display: none;">
+                <div class="error-icon">⚠️</div>
+                <h3>Error loading shopping list</h3>
+                <p id="errorMessage"></p>
+                <button id="retryBtn" class="btn btn-primary">Retry</button>
+            </div>
+
+            <div id="shoppingListContent" style="display: none;">
+                <div class="summary">
+                    <span id="itemCount">0 items</span>
+                    <div class="summary-actions">
+                        <button id="exportBtn" class="btn btn-secondary">📤 Export</button>
+                        <button id="clearBtn" class="btn btn-danger">🗑️ Clear All</button>
+                    </div>
+                </div>
+
+                <div id="ingredientsList" class="ingredients-list">
+                    <!-- Ingredients will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Substitutions View -->
+        <div id="substitutionsView" style="display: none;">
+            <header class="popup-header">
+                <button id="backToMenuFromSubstitutionsBtn" class="btn btn-icon" title="Back to Menu">←</button>
+                <h1>🔄 Ingredient Substitutions</h1>
+            </header>
+
+            <div id="substitutionsLoadingIndicator" class="loading">
+                <div class="spinner"></div>
+                <p>Loading substitutions...</p>
+            </div>
+
+            <div id="substitutionsEmptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">🔄</div>
+                <h3>No substitutions available</h3>
+                <p>Add more ingredients to your shopping list to see substitution suggestions!</p>
+            </div>
+
+            <div id="substitutionsContent" style="display: none;">
+                <div class="substitutions-header">
+                    <h3>Combine Similar Ingredients</h3>
+                    <p>Select your preferred ingredients to consolidate your shopping list:</p>
+                </div>
+                
+                <div id="substitutionsList" class="substitutions-list">
+                    <!-- Substitution suggestions will be populated here -->
+                </div>
+                
+                <button id="applySubstitutionsBtn" class="apply-substitutions-btn" style="display: none;">
+                    Apply Selected Substitutions
+                </button>
+            </div>
+        </div>
+
+        <!-- Export Modal -->
+        <div id="exportModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Export Shopping List</h3>
+                    <button id="closeExportModal" class="btn btn-icon">✕</button>
+                </div>
+                <div class="modal-body">
+                    <p>Choose export format:</p>
+                    <div class="export-options">
+                        <button id="exportTxt" class="btn btn-outline">📄 Text</button>
+                        <button id="exportCsv" class="btn btn-outline">📊 CSV</button>
+                        <button id="exportPdf" class="btn btn-outline">📕 PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration Alert -->
+        <div id="configAlert" class="config-alert" style="display: none;">
+            <div class="alert-content">
+                <h3>⚙️ Setup Required</h3>
+                <p>Please configure your Brewfather credentials to use this extension.</p>
+                <button id="openSettingsBtn" class="btn btn-primary">Open Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+    <script>
+        // Standalone window specific initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add standalone-specific event listeners
+            document.getElementById('refreshBtn').addEventListener('click', () => {
+                window.location.reload();
+            });
+            
+            document.getElementById('closeBtn').addEventListener('click', () => {
+                window.close();
+            });
+            
+            // Auto-show shopping list in standalone mode after short delay
+            setTimeout(() => {
+                if (elements.mainMenu.style.display !== 'none') {
+                    showShoppingListView();
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>

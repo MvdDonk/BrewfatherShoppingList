@@ -1,5 +1,11 @@
 // Popup script for managing shopping list display and interactions
 
+// Detect if running in standalone window or popup
+const isStandalone = document.body.dataset.context === 'standalone' || 
+                    window.location.protocol === 'chrome-extension:' && 
+                    window.opener === null && 
+                    window.parent === window;
+
 document.addEventListener('DOMContentLoaded', async () => {
     await initializePopup();
 });
@@ -67,6 +73,13 @@ async function initializePopup() {
         return;
     }
     
+    // In standalone mode, go directly to shopping list
+    if (isStandalone) {
+        setupEventListeners();
+        showShoppingListView();
+        return;
+    }
+    
     // Check if we should show shopping list directly (after adding an item)
     const result = await chrome.storage.local.get(['showShoppingListOnOpen']);
     if (result.showShoppingListOnOpen) {
@@ -130,6 +143,18 @@ function hideAllViews() {
 
 // Update menu button states based on current context
 async function updateMenuButtonStates() {
+    // In standalone mode, disable "Add to Shopping List" as we can't access the current tab
+    if (isStandalone) {
+        if (elements.addToListBtn) {
+            elements.addToListBtn.classList.add('disabled');
+            const descriptionElement = elements.addToListBtn.querySelector('.menu-text p');
+            if (descriptionElement) {
+                descriptionElement.textContent = 'Use the popup to add recipes';
+            }
+        }
+        return;
+    }
+    
     // Check if we're on a recipe page
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     const isOnRecipePage = tab?.url && tab.url.includes('web.brewfather.app/tabs/recipes/recipe/');
@@ -707,27 +732,17 @@ function setupEventListeners() {
 // Pop out shopping list to new window
 async function popOutToNewWindow() {
     try {
-        // Get current shopping list data
-        const response = await chrome.runtime.sendMessage({
-            action: 'getShoppingList'
-        });
+        // Create a new window with the standalone HTML
+        const standaloneUrl = chrome.runtime.getURL('standalone.html');
         
-        if (!response.success) {
-            alert('Failed to get shopping list data');
-            return;
-        }
-        
-        const ingredients = response.data;
-        
-        // Create HTML content for the new window
-        const htmlContent = generateStandaloneShoppingListHTML(ingredients);
-        
-        // Create a new window
-        const newWindow = window.open('', '_blank', 'width=600,height=800,scrollbars=yes,resizable=yes');
+        // Create new window with appropriate size
+        const newWindow = window.open(
+            standaloneUrl, 
+            'brewfather-shopping-list', 
+            'width=800,height=900,scrollbars=yes,resizable=yes,menubar=no,toolbar=no,location=no,status=no'
+        );
         
         if (newWindow) {
-            newWindow.document.write(htmlContent);
-            newWindow.document.close();
             newWindow.focus();
         } else {
             alert('Pop-up blocked. Please allow pop-ups for this extension.');
@@ -738,325 +753,14 @@ async function popOutToNewWindow() {
     }
 }
 
-// Generate standalone HTML for shopping list
-function generateStandaloneShoppingListHTML(ingredients) {
-    const grouped = groupIngredientsByType(ingredients);
-    
-    let ingredientsHTML = '';
-    Object.entries(grouped).forEach(([type, items]) => {
-        if (items.length > 0) {
-            ingredientsHTML += `
-                <div class="ingredient-group">
-                    <h3 class="group-title">${getTypeDisplayName(type)}</h3>
-                    <div class="group-items">
-            `;
-            
-            items.forEach(ingredient => {
-                const amount = formatAmount(ingredient.amount, ingredient.unit);
-                const details = getIngredientDetails(ingredient);
-                const recipes = getRecipeInfo(ingredient);
-                
-                ingredientsHTML += `
-                    <div class="ingredient-item">
-                        <div class="ingredient-info">
-                            <div class="ingredient-name">${escapeHtml(ingredient.name)}</div>
-                            ${details ? `<div class="ingredient-details">${escapeHtml(details)}</div>` : ''}
-                            <div class="ingredient-amount">${amount}</div>
-                            ${recipes ? `<div class="ingredient-recipes">${escapeHtml(recipes)}</div>` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            ingredientsHTML += `
-                    </div>
-                </div>
-            `;
-        }
-    });
-    
-    if (!ingredientsHTML) {
-        ingredientsHTML = `
-            <div class="empty-message">
-                <h3>🛒 No ingredients yet</h3>
-                <p>Add some recipes to your shopping list to see them here!</p>
-            </div>
-        `;
-    }
-    
-    return `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Brewfather Shopping List</title>
-            <style>
-                body {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                    margin: 0;
-                    padding: 20px;
-                    background: #f8f9fa;
-                    line-height: 1.6;
-                }
-                .header {
-                    background: linear-gradient(135deg, #f39c12, #e67e22);
-                    color: white;
-                    padding: 20px;
-                    margin: -20px -20px 20px;
-                    text-align: center;
-                }
-                .header h1 {
-                    margin: 0;
-                    font-size: 24px;
-                }
-                .summary {
-                    background: white;
-                    padding: 15px 20px;
-                    margin-bottom: 20px;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    font-weight: 600;
-                    color: #495057;
-                }
-                .summary-count {
-                    font-size: 16px;
-                }
-                .summary-actions {
-                    display: flex;
-                    gap: 10px;
-                }
-                .btn {
-                    background: #6c757d;
-                    color: white;
-                    border: none;
-                    border-radius: 6px;
-                    padding: 8px 12px;
-                    font-size: 12px;
-                    font-weight: 500;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    text-decoration: none;
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 4px;
-                }
-                .btn:hover {
-                    transform: translateY(-1px);
-                    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-                }
-                .btn-secondary {
-                    background: #6c757d;
-                }
-                .btn-secondary:hover {
-                    background: #5a6268;
-                }
-                .btn-danger {
-                    background: #dc3545;
-                }
-                .btn-danger:hover {
-                    background: #c82333;
-                }
-                .ingredient-group {
-                    margin-bottom: 30px;
-                }
-                .group-title {
-                    background: #e9ecef;
-                    padding: 10px 15px;
-                    margin: 0 0 10px;
-                    border-radius: 6px;
-                    font-size: 16px;
-                    font-weight: 600;
-                    color: #495057;
-                }
-                .ingredient-item {
-                    background: white;
-                    padding: 15px 20px;
-                    margin-bottom: 8px;
-                    border-radius: 6px;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                }
-                .ingredient-name {
-                    font-weight: 600;
-                    color: #343a40;
-                    margin-bottom: 4px;
-                }
-                .ingredient-details {
-                    font-size: 12px;
-                    color: #6c757d;
-                    margin-bottom: 4px;
-                }
-                .ingredient-amount {
-                    font-size: 14px;
-                    color: #495057;
-                    font-weight: 500;
-                }
-                .ingredient-recipes {
-                    font-size: 11px;
-                    color: #868e96;
-                    margin-top: 4px;
-                }
-                .empty-message {
-                    text-align: center;
-                    padding: 40px 20px;
-                    background: white;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                }
-                .empty-message h3 {
-                    margin: 0 0 10px;
-                    color: #343a40;
-                }
-                .empty-message p {
-                    margin: 0;
-                    color: #6c757d;
-                }
-                @media print {
-                    body { background: white; }
-                    .header { background: #f39c12 !important; }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>🍺 Brewfather Shopping List</h1>
-                <p>Generated: ${new Date().toLocaleDateString()}</p>
-            </div>
-            <div class="summary">
-                <span class="summary-count">${ingredients.length} ingredient${ingredients.length !== 1 ? 's' : ''} total</span>
-                <div class="summary-actions">
-                    <button class="btn btn-secondary" onclick="exportShoppingList()">📤 Export</button>
-                    <button class="btn btn-danger" onclick="clearShoppingList()">🗑️ Clear All</button>
-                </div>
-            </div>
-            <div class="shopping-list">
-                ${ingredientsHTML}
-            </div>
-            
-            <script>
-                function exportShoppingList() {
-                    // Show export options
-                    const format = prompt('Choose export format:\\n1. Text (.txt)\\n2. CSV (.csv)\\n3. PDF (print to PDF)\\n\\nEnter 1, 2, or 3:');
-                    
-                    if (format === '1') {
-                        exportAsText();
-                    } else if (format === '2') {
-                        exportAsCSV();
-                    } else if (format === '3') {
-                        window.print();
-                    }
-                }
-                
-                function exportAsText() {
-                    const ingredients = ${JSON.stringify(ingredients)};
-                    let content = 'Brewfather Shopping List\\n';
-                    content += '======================\\n\\n';
-                    content += 'Generated: ' + new Date().toLocaleDateString() + '\\n\\n';
-                    
-                    const grouped = groupIngredientsByType(ingredients);
-                    Object.entries(grouped).forEach(([type, items]) => {
-                        if (items.length > 0) {
-                            content += getTypeDisplayName(type) + ':\\n';
-                            content += '-'.repeat(getTypeDisplayName(type).length + 1) + '\\n';
-                            items.forEach(ingredient => {
-                                const amount = formatAmount(ingredient.amount, ingredient.unit);
-                                content += '• ' + ingredient.name + ' - ' + amount + '\\n';
-                            });
-                            content += '\\n';
-                        }
-                    });
-                    
-                    downloadFile(content, 'brewfather-shopping-list.txt', 'text/plain');
-                }
-                
-                function exportAsCSV() {
-                    const ingredients = ${JSON.stringify(ingredients)};
-                    let content = 'Type,Name,Amount,Unit,Details\\n';
-                    
-                    ingredients.forEach(ingredient => {
-                        const type = getTypeDisplayName(ingredient.type);
-                        const name = escapeCSV(ingredient.name);
-                        const amount = ingredient.amount || '';
-                        const unit = ingredient.unit || '';
-                        const details = escapeCSV(getIngredientDetails(ingredient) || '');
-                        content += type + ',' + name + ',' + amount + ',' + unit + ',' + details + '\\n';
-                    });
-                    
-                    downloadFile(content, 'brewfather-shopping-list.csv', 'text/csv');
-                }
-                
-                function clearShoppingList() {
-                    if (confirm('Are you sure you want to clear all items from your shopping list? This action cannot be undone.')) {
-                        // In standalone window, we can't directly clear the extension's storage
-                        alert('To clear the shopping list, please use the extension popup or refresh this page after clearing from the extension.');
-                    }
-                }
-                
-                function downloadFile(content, filename, mimeType) {
-                    const blob = new Blob([content], { type: mimeType });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = filename;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                }
-                
-                function escapeCSV(str) {
-                    if (!str) return '';
-                    if (str.includes(',') || str.includes('"') || str.includes('\\n')) {
-                        return '"' + str.replace(/"/g, '""') + '"';
-                    }
-                    return str;
-                }
-                
-                function groupIngredientsByType(ingredients) {
-                    const grouped = {};
-                    ingredients.forEach(ingredient => {
-                        const type = ingredient.type || 'other';
-                        if (!grouped[type]) grouped[type] = [];
-                        grouped[type].push(ingredient);
-                    });
-                    return grouped;
-                }
-                
-                function getTypeDisplayName(type) {
-                    const typeMap = {
-                        'fermentables': 'Fermentables',
-                        'hops': 'Hops',
-                        'yeasts': 'Yeasts',
-                        'water': 'Water Agents',
-                        'miscs': 'Miscellaneous',
-                        'other': 'Other'
-                    };
-                    return typeMap[type] || 'Other';
-                }
-                
-                function formatAmount(amount, unit) {
-                    if (!amount && !unit) return '';
-                    if (!amount) return unit;
-                    if (!unit) return amount.toString();
-                    return amount + ' ' + unit;
-                }
-                
-                function getIngredientDetails(ingredient) {
-                    const details = [];
-                    if (ingredient.color) details.push(ingredient.color + ' EBC');
-                    if (ingredient.alpha) details.push(ingredient.alpha + '% α');
-                    if (ingredient.attenuation) details.push(ingredient.attenuation + '% att.');
-                    if (ingredient.temp) details.push(ingredient.temp + '°C');
-                    return details.join(', ');
-                }
-            </script>
-        </body>
-        </html>
-    `;
-}
 async function addCurrentRecipeToShoppingList() {
     try {
+        // In standalone mode, we can't access the current tab
+        if (isStandalone) {
+            alert('Please use the extension popup to add recipes from recipe pages.');
+            return;
+        }
+        
         // Get current tab
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         
