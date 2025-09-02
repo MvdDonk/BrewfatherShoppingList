@@ -2,9 +2,7 @@
 
 // Detect if running in standalone window or popup
 const isStandalone = document.body.dataset.context === 'standalone' || 
-                    window.location.protocol === 'chrome-extension:' && 
-                    window.opener === null && 
-                    window.parent === window;
+                    (window.location.href.includes('standalone.html'));
 
 document.addEventListener('DOMContentLoaded', async () => {
     await initializePopup();
