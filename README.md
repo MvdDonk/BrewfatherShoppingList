@@ -8,6 +8,7 @@ A Microsoft Edge browser extension that creates shopping lists from your Brewfat
 - 🔗 **Smart Integration**: Automatically detects when you're viewing a recipe on Brewfather
 - 📊 **Ingredient Aggregation**: Combines quantities when adding the same ingredient from multiple recipes
 - 📤 **Multiple Export Formats**: Export your shopping list as Text, CSV, or PDF
+- 🌙 **Dark Mode Support**: Automatically follows your system's dark/light mode preference, or set manually
 - 🔒 **Secure**: Your API credentials are stored securely in your browser
 
 ## Installation
@@ -33,9 +34,10 @@ A Microsoft Edge browser extension that creates shopping lists from your Brewfat
 
 1. Click the extension icon in your toolbar
 2. Click "Open Settings" or right-click the extension and select "Options"
-3. Enter your Brewfather User ID and API Key
-4. Click "Save Settings"
-5. Click "Test Connection" to verify your credentials work
+3. **Set Your Theme Preference**: Choose between "Follow System Settings", "Light Mode", or "Dark Mode"
+4. Enter your Brewfather User ID and API Key
+5. Click "Save Settings"
+6. Click "Test Connection" to verify your credentials work
 
 ## How to Use
 

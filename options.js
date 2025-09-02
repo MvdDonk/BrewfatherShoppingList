@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // DOM elements
 const elements = {
+    themeSelect: document.getElementById('themeSelect'),
     userId: document.getElementById('userId'),
     apiKey: document.getElementById('apiKey'),
     saveBtn: document.getElementById('saveBtn'),
@@ -18,12 +19,13 @@ async function initializeOptions() {
     await loadSettings();
     setupEventListeners();
     updateTestButtonState();
+    applyTheme();
 }
 
 // Load existing settings
 async function loadSettings() {
     try {
-        const result = await chrome.storage.sync.get(['brewfatherUserId', 'brewfatherApiKey']);
+        const result = await chrome.storage.sync.get(['brewfatherUserId', 'brewfatherApiKey', 'theme']);
         
         if (result.brewfatherUserId) {
             elements.userId.value = result.brewfatherUserId;
@@ -31,6 +33,12 @@ async function loadSettings() {
         
         if (result.brewfatherApiKey) {
             elements.apiKey.value = result.brewfatherApiKey;
+        }
+        
+        if (result.theme) {
+            elements.themeSelect.value = result.theme;
+        } else {
+            elements.themeSelect.value = 'system'; // Default to system preference
         }
     } catch (error) {
         console.error('Error loading settings:', error);
@@ -40,6 +48,9 @@ async function loadSettings() {
 
 // Setup event listeners
 function setupEventListeners() {
+    // Theme select
+    elements.themeSelect.addEventListener('change', handleThemeChange);
+    
     // Save button
     elements.saveBtn.addEventListener('click', saveSettings);
     
@@ -70,6 +81,7 @@ function updateTestButtonState() {
 
 // Save settings
 async function saveSettings() {
+    const theme = elements.themeSelect.value;
     const userId = elements.userId.value.trim();
     const apiKey = elements.apiKey.value.trim();
     
@@ -94,6 +106,7 @@ async function saveSettings() {
     try {
         // Save to storage
         await chrome.storage.sync.set({
+            theme: theme,
             brewfatherUserId: userId,
             brewfatherApiKey: apiKey
         });
@@ -205,4 +218,44 @@ function isValidUserId(userId) {
 function isValidApiKey(apiKey) {
     // Basic check - API keys are typically longer alphanumeric strings
     return /^[a-zA-Z0-9]+$/.test(apiKey) && apiKey.length > 20;
+}
+
+// Theme handling functions
+async function handleThemeChange() {
+    const theme = elements.themeSelect.value;
+    
+    try {
+        // Save theme preference immediately
+        await chrome.storage.sync.set({ theme: theme });
+        applyTheme();
+        
+        showStatus('Theme preference saved!', 'success');
+    } catch (error) {
+        console.error('Error saving theme preference:', error);
+        showStatus('Failed to save theme preference', 'error');
+    }
+}
+
+function applyTheme() {
+    const theme = elements.themeSelect.value;
+    
+    // Remove existing theme attributes
+    document.documentElement.removeAttribute('data-theme');
+    
+    if (theme !== 'system') {
+        // Apply user-selected theme
+        document.documentElement.setAttribute('data-theme', theme);
+    }
+    // If 'system', let CSS media query handle it
+}
+
+// Listen for system theme changes when using system preference
+if (window.matchMedia) {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addListener((e) => {
+        // Only respond to system changes if user has selected 'system'
+        if (elements.themeSelect.value === 'system') {
+            applyTheme();
+        }
+    });
 }

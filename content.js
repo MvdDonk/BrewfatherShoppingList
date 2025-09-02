@@ -42,10 +42,10 @@
                         button.textContent = originalText;
                         button.disabled = false;
                         
-                        // // Show shopping list popup
-                        // chrome.runtime.sendMessage({
-                        //     action: 'showShoppingList'
-                        // });
+                        // Show shopping list popup
+                        chrome.runtime.sendMessage({
+                            action: 'showShoppingList'
+                        });
                     }, 2000);
                 } else {
                     throw new Error(response.error || 'Failed to add recipe');
@@ -276,6 +276,9 @@
     function init() {
         console.log('Initializing content script, checking recipe ID...');
         
+        // Apply theme first
+        applyTheme();
+        
         // Check if we're on a recipe page
         const recipeId = getRecipeId();
         if (!recipeId) {
@@ -347,4 +350,42 @@
             setTimeout(init, 1000);
         }
     });
+
+    // Theme handling functions
+    async function applyTheme() {
+        try {
+            const result = await chrome.storage.sync.get(['theme']);
+            const theme = result.theme || 'system'; // Default to system preference
+            
+            // Remove existing theme attributes
+            document.documentElement.removeAttribute('data-theme');
+            
+            if (theme !== 'system') {
+                // Apply user-selected theme
+                document.documentElement.setAttribute('data-theme', theme);
+            }
+            // If 'system', let CSS media query handle it
+        } catch (error) {
+            console.error('Error applying theme:', error);
+            // Fallback to system preference if error
+        }
+    }
+
+    // Listen for system theme changes when using system preference
+    if (window.matchMedia) {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        mediaQuery.addListener(async (e) => {
+            try {
+                const result = await chrome.storage.sync.get(['theme']);
+                const theme = result.theme || 'system';
+                
+                // Only respond to system changes if user has selected 'system'
+                if (theme === 'system') {
+                    await applyTheme();
+                }
+            } catch (error) {
+                console.error('Error handling system theme change:', error);
+            }
+        });
+    }
 })();
