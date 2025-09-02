@@ -1,12 +1,148 @@
 # Brewfather Shopping List Extension - Complete Context Document
 
 **Date Created**: August 31, 2025  
+**Last Updated**: September 2, 2025  
 **Project**: Microsoft Edge Browser Extension for Brewfather Recipe Shopping Lists  
-**Status**: Implemented and Ready for Testing
+**Status**: Production Ready with Advanced Features  
+**Version**: 2.0 (Multilingual & Enhanced UX)
 
 ## 📋 Project Overview
 
-This document contains all the context, decisions, and**Prevention**: Always consider recipe context when implementing ingredient combination logic.
+This document contains all the context, decisions, and**Prevention**: Always consider recipe **Prevention**: Always consider recipe context when implementing ingredient combination logic.
+
+## 🌐 Multilingual Support Implementation
+
+### Complete Internationalization System
+**Date Implemented**: September 2, 2025
+
+#### Architecture
+- **Translation Engine**: `i18n.js` - Complete internationalization system
+- **Language Detection**: Automatic system language detection with fallback
+- **Supported Languages**: English (en), Dutch (nl), German (de), French (fr)
+- **Translation Files**: Individual JSON files in `locales/` directory
+
+#### Key Features Implemented
+
+**System Language Following**:
+- Users can select "Follow System Language" to automatically use their OS language
+- Extension detects system language changes in real-time (30-second intervals)
+- Smart fallback to English when system language is unsupported
+- Clear notifications when system language is not supported
+
+**Language Persistence**:
+- Stores actual user preference ("system" vs specific language code)
+- Maintains "Follow System Language" setting across browser sessions
+- Only resolves to specific language when actually applying translations
+
+**Real-time Updates**:
+- All UI elements update instantly when language changes
+- No page reload required for language switching
+- Preview mode allows testing languages before saving
+
+#### Technical Implementation
+
+**i18n.js Class Structure**:
+```javascript
+class I18n {
+    constructor() {
+        this.currentLanguage = 'en';
+        this.preferredLanguage = 'system'; // User's actual preference
+        this.systemLanguage = 'en'; // Detected system language
+        this.translations = {};
+        this.supportedLanguages = ['en', 'nl', 'de', 'fr'];
+        this.systemLanguageUnsupportedWarning = false;
+    }
+}
+```
+
+**Key Methods**:
+- `detectSystemLanguage()`: Browser language detection
+- `checkSystemLanguageChange()`: Real-time system language monitoring
+- `setLanguage(code, save)`: Language setting with preference persistence
+- `isSystemLanguageUnsupported()`: Warning status checking
+
+**Translation File Structure**:
+- Nested JSON objects for organized translations
+- Parameter interpolation support (`{{variable}}`)
+- Pluralization support (`key` and `key_plural`)
+- Comprehensive coverage of all UI elements
+
+#### Integration Points
+- **popup.js**: Full interface translation for all views
+- **options.js**: Settings page with real-time language switching
+- **All HTML files**: Data attributes and content updated dynamically
+
+### Preview Mode Settings System
+
+#### Safe Settings Testing
+**Date Implemented**: September 2, 2025
+
+#### Architecture
+- **Preview Mode**: All settings changes are temporary until explicitly saved
+- **Automatic Revert**: Unsaved changes discarded when leaving settings
+- **Real-time Feedback**: Immediate visual updates for all setting changes
+
+#### Features Implemented
+
+**Language Preview**:
+- Language changes applied instantly to interface
+- Warning messages for unsupported system languages
+- No persistence until "Save Settings" clicked
+
+**Theme Preview**:
+- Theme changes applied immediately for visual testing
+- Separate preview and saved theme application functions
+- Reverts to saved theme if not explicitly saved
+
+**Credentials Preview**:
+- Form changes update test button state immediately
+- No automatic saving of credential changes
+- Clear validation feedback
+
+**Revert Protection**:
+- `beforeunload` event handling for page navigation
+- `visibilitychange` event for tab switching
+- Manual "Reset to Saved" button for immediate revert
+
+#### Technical Implementation
+
+**Settings Tracking**:
+```javascript
+let originalSettings = {
+    theme: null,
+    language: null,
+    userId: '',
+    apiKey: ''
+};
+```
+
+**Preview Functions**:
+- `applyThemePreview()`: Temporary theme application
+- `handleLanguageChange()`: Language preview with warnings
+- `revertToOriginalSettings()`: Complete settings revert
+
+### Alphabetical Sorting System
+
+#### Smart Ingredient Organization
+**Date Implemented**: September 2, 2025
+
+#### Implementation
+- Ingredients sorted alphabetically within each group (Fermentables, Hops, Yeasts)
+- Group order maintained: 1. Fermentables, 2. Hops, 3. Yeasts
+- Case-insensitive sorting for consistent results
+
+#### Technical Details
+```javascript
+// Sort function maintaining groups but alphabetizing within groups
+const sortedItems = ingredients.sort((a, b) => {
+    if (a.type !== b.type) {
+        return typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type);
+    }
+    return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+});
+```
+
+## 💾 Backup & Recoverytext when implementing ingredient combination logic.
 
 ### Pop-out Window Implementation
 
@@ -55,9 +191,14 @@ Create a Microsoft Edge browser extension that allows users to generate shopping
 2. ✅ Inject "Add to Shopping List" button on recipe pages
 3. ✅ Fetch recipe data using Brewfather API v2
 4. ✅ Extract and aggregate ingredients (fermentables, hops, yeasts)
-5. ✅ Store shopping list persistently
+5. ✅ Store shopping list persistently with alphabetical sorting
 6. ✅ Provide export functionality (Text, CSV, PDF)
-7. ✅ Secure credential management
+7. ✅ Secure credential management with preview mode
+8. ✅ Complete multilingual support (4 languages)
+9. ✅ System language detection and following
+10. ✅ Safe settings preview with automatic revert
+11. ✅ Ingredient substitution suggestions
+12. ✅ Responsive design for popup and standalone modes
 
 ## 🏗️ Architecture & Technical Decisions
 
@@ -363,13 +504,36 @@ if (fermentable1.recipeIds && fermentable2.recipeIds) {
 
 ### Critical Files for Backup
 - All source files in project directory
+- `locales/` directory with all translation files
 - User credentials (stored in browser, not files)
 - Shopping list data (stored locally per browser)
 
 ### Version Control
 - Repository should include all source files
+- Include all translation files and i18n system
 - Exclude any files containing actual API credentials
 - Include example configuration for documentation
+
+### Recent Major Updates Summary
+
+#### September 2, 2025 - Comprehensive Enhancement Release
+1. **Complete Multilingual Support**: 4-language system with intelligent detection
+2. **Preview Mode Settings**: Safe testing environment for all settings
+3. **Alphabetical Sorting**: Enhanced shopping list organization
+4. **System Language Following**: Real-time detection and adaptation
+5. **Enhanced User Experience**: Automatic revert protection and clear feedback
+
+#### Key Files Modified
+- `i18n.js` - Complete rewrite for advanced internationalization
+- `options.js` - Enhanced with preview mode and language detection
+- `locales/*.json` - New translation files for 4 languages
+- `popup.js` - Integrated with i18n system
+- `README.md` - Updated documentation for all new features
+
+#### Backwards Compatibility
+- All existing functionality preserved
+- Settings migrate automatically to new system
+- No breaking changes for existing users
 
 ---
 
