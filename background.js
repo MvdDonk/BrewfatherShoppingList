@@ -358,12 +358,21 @@ async function updateSubstitutions() {
     return substitutions;
 }
 
+// Clear all substitutions
+async function clearSubstitutions() {
+    await chrome.storage.local.set({ [STORAGE_KEYS.SUBSTITUTIONS]: [] });
+}
+
 // Remove from shopping list
 async function removeFromShoppingList(ingredientId) {
     const currentList = await getShoppingList();
     const updatedList = currentList.filter(item => item.id !== ingredientId);
 
     await saveShoppingList(updatedList);
+    
+    // Update substitutions after removing ingredient
+    await updateSubstitutions();
+    
     return updatedList;
 }
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -392,7 +401,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     
     if (message.action === 'clearShoppingList') {
-        saveShoppingList([])
+        Promise.all([
+            saveShoppingList([]),
+            clearSubstitutions()
+        ])
             .then(() => sendResponse({ success: true }))
             .catch(error => sendResponse({ success: false, error: error.message }));
         return true;
@@ -429,6 +441,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'applyMultipleSubstitutions') {
         applyMultipleSubstitutions(message.substitutions)
             .then(result => sendResponse({ success: true, data: result }))
+            .catch(error => sendResponse({ success: false, error: error.message }));
+        return true;
+    }
+    
+    if (message.action === 'clearSubstitutions') {
+        clearSubstitutions()
+            .then(() => sendResponse({ success: true }))
             .catch(error => sendResponse({ success: false, error: error.message }));
         return true;
     }

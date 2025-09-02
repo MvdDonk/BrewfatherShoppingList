@@ -61,6 +61,9 @@ async function initializePopup() {
     // Apply theme first
     await applyTheme();
     
+    // Set up storage listeners for automatic updates
+    setupStorageListeners();
+    
     // Check if credentials are configured
     const hasCredentials = await checkCredentials();
     
@@ -93,6 +96,60 @@ async function initializePopup() {
     
     // Setup event listeners
     setupEventListeners();
+}
+
+// Setup storage listeners for automatic updates
+function setupStorageListeners() {
+    // Listen for storage changes
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+        if (namespace === 'local') {
+            // Handle shopping list changes
+            if (changes.shoppingList) {
+                handleShoppingListUpdate(changes.shoppingList.newValue || []);
+            }
+            
+            // Handle substitutions changes
+            if (changes.ingredientSubstitutions) {
+                handleSubstitutionsUpdate(changes.ingredientSubstitutions.newValue || []);
+            }
+        }
+        
+        if (namespace === 'sync') {
+            // Handle theme changes
+            if (changes.theme) {
+                applyTheme();
+            }
+        }
+    });
+}
+
+// Handle shopping list updates from storage
+async function handleShoppingListUpdate(newShoppingList) {
+    // Only update if we're currently showing the shopping list view
+    if (elements.shoppingListView.style.display !== 'none') {
+        // Get fresh substitutions data
+        const response = await chrome.runtime.sendMessage({ action: 'getSubstitutions' });
+        const substitutions = response.success ? response.data : [];
+        
+        // Update the display
+        displayShoppingList(newShoppingList, substitutions);
+    }
+    
+    // Update substitution counts in all views
+    const response = await chrome.runtime.sendMessage({ action: 'getSubstitutions' });
+    const substitutions = response.success ? response.data : [];
+    updateSubstitutionCounts(substitutions);
+}
+
+// Handle substitutions updates from storage
+function handleSubstitutionsUpdate(newSubstitutions) {
+    // Update substitution counts
+    updateSubstitutionCounts(newSubstitutions);
+    
+    // If we're in the substitutions view, refresh it
+    if (elements.substitutionsView.style.display !== 'none') {
+        displaySubstitutionsInView(newSubstitutions);
+    }
 }
 
 // Check if credentials are configured
@@ -819,7 +876,16 @@ async function clearShoppingList() {
         });
         
         if (response.success) {
+            // Clear substitutions as well since shopping list is empty
+            await chrome.runtime.sendMessage({
+                action: 'clearSubstitutions'
+            });
+            
+            // Reload shopping list to show empty state
             await loadShoppingList();
+            
+            // Update substitution counts (should be 0 now)
+            updateSubstitutionCounts([]);
         } else {
             alert('Failed to clear shopping list: ' + response.error);
         }
@@ -838,7 +904,15 @@ async function removeIngredient(ingredientId) {
         });
         
         if (response.success) {
-            displayShoppingList(response.data);
+            // Update substitutions after removing ingredient
+            const substitutionsResponse = await chrome.runtime.sendMessage({ action: 'updateSubstitutions' });
+            const substitutions = substitutionsResponse.success ? substitutionsResponse.data : [];
+            
+            // Update the display with fresh data
+            displayShoppingList(response.data, substitutions);
+            
+            // Update substitution counts
+            updateSubstitutionCounts(substitutions);
         } else {
             alert('Failed to remove ingredient: ' + response.error);
         }
