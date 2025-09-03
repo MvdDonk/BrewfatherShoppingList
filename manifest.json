@@ -32,7 +32,8 @@
     {
       "resources": [
         "standalone.html",
-        "locales/*.json"
+        "locales/*.json",
+        "malt-substitution-database.json"
       ],
       "matches": ["<all_urls>"]
     }

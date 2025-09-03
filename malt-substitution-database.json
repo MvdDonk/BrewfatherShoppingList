@@ -1,0 +1,368 @@
+{
+  "maltSubstitutions": {
+    "baseMalts": {
+      "Base (Pilsner)": {
+        "name": "Pilsner/Lager Malt",
+        "description": "Light base malt for lagers and light ales",
+        "colorRange": { "min": 1.4, "max": 4.0 },
+        "substitutions": [
+          {
+            "name": "2-Row Pale",
+            "colorRange": { "min": 1.4, "max": 4.0 },
+            "notes": "Very close substitute, may need slight color adjustment"
+          },
+          {
+            "name": "Lager Malt",
+            "colorRange": { "min": 2.0, "max": 4.0 },
+            "notes": "Direct substitute"
+          },
+          {
+            "name": "Pale Ale Malt",
+            "colorRange": { "min": 4.0, "max": 7.0 },
+            "notes": "Slightly darker, will add more body and flavor"
+          },
+          {
+            "name": "Extra Pale Malt",
+            "colorRange": { "min": 2.0, "max": 3.5 },
+            "notes": "Lighter option"
+          }
+        ]
+      },
+      "Base (Munich)": {
+        "name": "Munich Malt",
+        "description": "Adds malty sweetness and body",
+        "colorRange": { "min": 6.0, "max": 80.0 },
+        "substitutions": [
+          {
+            "name": "Vienna Malt",
+            "colorRange": { "min": 4.0, "max": 10.0 },
+            "notes": "Lighter but similar malty character"
+          },
+          {
+            "name": "Munich I (Light)",
+            "colorRange": { "min": 12.0, "max": 18.0 },
+            "notes": "Direct substitute for light Munich"
+          },
+          {
+            "name": "Munich II (Dark)",
+            "colorRange": { "min": 20.0, "max": 25.0 },
+            "notes": "Darker Munich variety"
+          },
+          {
+            "name": "Pale Ale + Crystal 40",
+            "colorRange": { "min": 15.0, "max": 25.0 },
+            "notes": "Mix 80% Pale Ale + 20% Crystal 40 for similar color/flavor"
+          }
+        ]
+      },
+      "Base (Vienna)": {
+        "name": "Vienna Malt",
+        "description": "Light caramel flavor and golden color",
+        "colorRange": { "min": 4.0, "max": 10.0 },
+        "substitutions": [
+          {
+            "name": "Munich Light",
+            "colorRange": { "min": 12.0, "max": 18.0 },
+            "notes": "Slightly darker but similar character"
+          },
+          {
+            "name": "Pilsner + Crystal 20",
+            "colorRange": { "min": 6.0, "max": 12.0 },
+            "notes": "Mix 90% Pilsner + 10% Crystal 20"
+          },
+          {
+            "name": "Pale Ale Malt",
+            "colorRange": { "min": 5.0, "max": 7.0 },
+            "notes": "Similar color, less malty sweetness"
+          }
+        ]
+      },
+      "Base (Wheat)": {
+        "name": "Wheat Malt",
+        "description": "Improves head retention and body",
+        "colorRange": { "min": 2.5, "max": 5.0 },
+        "substitutions": [
+          {
+            "name": "Pale Wheat Malt",
+            "colorRange": { "min": 3.0, "max": 5.0 },
+            "notes": "Direct substitute"
+          },
+          {
+            "name": "White Wheat Malt",
+            "colorRange": { "min": 2.5, "max": 4.0 },
+            "notes": "Lighter variety"
+          },
+          {
+            "name": "Pilsner Malt",
+            "colorRange": { "min": 2.0, "max": 4.0 },
+            "notes": "Different protein profile but usable"
+          }
+        ]
+      },
+      "Base (Rye)": {
+        "name": "Rye Malt",
+        "description": "Adds spicy character and dryness",
+        "colorRange": { "min": 4.0, "max": 15.0 },
+        "substitutions": [
+          {
+            "name": "Pale Rye Malt",
+            "colorRange": { "min": 4.0, "max": 10.0 },
+            "notes": "Direct substitute"
+          },
+          {
+            "name": "Munich + Pale Ale",
+            "colorRange": { "min": 8.0, "max": 15.0 },
+            "notes": "Mix for similar color, different flavor profile"
+          }
+        ]
+      }
+    },
+    "crystalCaramel": {
+      "Crystal/Caramel": {
+        "name": "Crystal/Caramel Malts",
+        "description": "Adds sweetness, body, and color",
+        "colorRange": { "min": 10.0, "max": 400.0 },
+        "substitutions": [
+          {
+            "name": "Crystal 10-20L",
+            "colorRange": { "min": 10.0, "max": 27.0 },
+            "notes": "CaraHell, CaraPils, Light Carastan",
+            "equivalents": ["CaraHell", "CaraPils", "Caramalt", "Light Carastan"]
+          },
+          {
+            "name": "Crystal 30-40L",
+            "colorRange": { "min": 25.0, "max": 60.0 },
+            "notes": "CaraMunich I, CaraAmber, Carastan",
+            "equivalents": ["CaraMunich I", "CaraAmber", "Carastan", "Medium Caramel"]
+          },
+          {
+            "name": "Crystal 60L",
+            "colorRange": { "min": 60.0, "max": 80.0 },
+            "notes": "CaraMunich III, Medium Crystal",
+            "equivalents": ["CaraMunich III", "Medium Crystal", "Dark Caramel"]
+          },
+          {
+            "name": "Crystal 80L",
+            "colorRange": { "min": 80.0, "max": 100.0 },
+            "notes": "Dark Crystal, CaraMunich III",
+            "equivalents": ["Dark Crystal", "CaraMunich III"]
+          },
+          {
+            "name": "Crystal 120L",
+            "colorRange": { "min": 110.0, "max": 140.0 },
+            "notes": "CaraAroma, Special W, Dark Crystal",
+            "equivalents": ["CaraAroma", "Special W", "Dark Crystal II"]
+          },
+          {
+            "name": "Crystal 150L+",
+            "colorRange": { "min": 140.0, "max": 400.0 },
+            "notes": "Very dark crystal malts",
+            "equivalents": ["Crystal Dark", "Extra Dark Crystal", "Crystal 240", "Crystal 400"]
+          }
+        ]
+      }
+    },
+    "specialtyMalts": {
+      "Chocolate": {
+        "name": "Chocolate Malt",
+        "description": "Coffee and chocolate flavors",
+        "colorRange": { "min": 350.0, "max": 500.0 },
+        "substitutions": [
+          {
+            "name": "Carafa II",
+            "colorRange": { "min": 415.0, "max": 500.0 },
+            "notes": "Dehusked chocolate malt, less astringent"
+          },
+          {
+            "name": "Pale Chocolate",
+            "colorRange": { "min": 200.0, "max": 300.0 },
+            "notes": "Lighter chocolate flavor"
+          },
+          {
+            "name": "Roasted Barley",
+            "colorRange": { "min": 300.0, "max": 600.0 },
+            "notes": "More roasted flavor, different character"
+          }
+        ]
+      },
+      "Black Patent": {
+        "name": "Black Malt",
+        "description": "Intense roasted flavor and dark color",
+        "colorRange": { "min": 500.0, "max": 600.0 },
+        "substitutions": [
+          {
+            "name": "Carafa III",
+            "colorRange": { "min": 700.0, "max": 900.0 },
+            "notes": "Dehusked black malt, smoother"
+          },
+          {
+            "name": "Black Patent",
+            "colorRange": { "min": 500.0, "max": 600.0 },
+            "notes": "Direct substitute"
+          },
+          {
+            "name": "Roasted Barley",
+            "colorRange": { "min": 550.0, "max": 700.0 },
+            "notes": "More coffee-like character"
+          }
+        ]
+      },
+      "Victory": {
+        "name": "Victory/Amber Malt",
+        "description": "Toasted bread and biscuit flavors",
+        "colorRange": { "min": 25.0, "max": 35.0 },
+        "substitutions": [
+          {
+            "name": "Amber Malt",
+            "colorRange": { "min": 20.0, "max": 40.0 },
+            "notes": "Direct substitute"
+          },
+          {
+            "name": "Biscuit Malt",
+            "colorRange": { "min": 45.0, "max": 50.0 },
+            "notes": "Similar flavor, slightly darker"
+          },
+          {
+            "name": "Melanoidin Malt",
+            "colorRange": { "min": 60.0, "max": 80.0 },
+            "notes": "More intense malty flavor"
+          }
+        ]
+      },
+      "Special B": {
+        "name": "Special B",
+        "description": "Dark fruit and caramel flavors",
+        "colorRange": { "min": 120.0, "max": 180.0 },
+        "substitutions": [
+          {
+            "name": "CaraAroma",
+            "colorRange": { "min": 130.0, "max": 160.0 },
+            "notes": "Similar dark caramel character"
+          },
+          {
+            "name": "Crystal 150L",
+            "colorRange": { "min": 140.0, "max": 170.0 },
+            "notes": "Less fruity, more caramel"
+          },
+          {
+            "name": "Dark Crystal + Chocolate (blend)",
+            "colorRange": { "min": 150.0, "max": 200.0 },
+            "notes": "Mix 70% Dark Crystal + 30% Light Chocolate"
+          }
+        ]
+      },
+      "Acidulated": {
+        "name": "Acid Malt",
+        "description": "Lowers mash pH",
+        "colorRange": { "min": 3.0, "max": 7.0 },
+        "substitutions": [
+          {
+            "name": "Sour Malt",
+            "colorRange": { "min": 3.0, "max": 6.0 },
+            "notes": "Direct substitute"
+          },
+          {
+            "name": "Sauermalz",
+            "colorRange": { "min": 3.0, "max": 6.0 },
+            "notes": "German equivalent"
+          }
+        ]
+      },
+      "Dextrin/CaraPils": {
+        "name": "Dextrin Malt",
+        "description": "Adds body without fermentable sugars",
+        "colorRange": { "min": 1.5, "max": 3.5 },
+        "substitutions": [
+          {
+            "name": "CaraPils",
+            "colorRange": { "min": 2.0, "max": 4.0 },
+            "notes": "Direct substitute"
+          },
+          {
+            "name": "Carafoam",
+            "colorRange": { "min": 2.0, "max": 3.0 },
+            "notes": "Similar body-building properties"
+          }
+        ]
+      }
+    },
+    "smokedMalts": {
+      "Smoked": {
+        "name": "Smoked Malts",
+        "description": "Adds smoke flavor",
+        "colorRange": { "min": 3.0, "max": 10.0 },
+        "substitutions": [
+          {
+            "name": "Beech Smoked",
+            "colorRange": { "min": 4.0, "max": 8.0 },
+            "notes": "Mild smoke flavor"
+          },
+          {
+            "name": "Cherry Smoked",
+            "colorRange": { "min": 4.0, "max": 8.0 },
+            "notes": "Fruity smoke character"
+          },
+          {
+            "name": "Peated Malt",
+            "colorRange": { "min": 3.0, "max": 6.0 },
+            "notes": "Phenolic smoke character, use 10-40% less"
+          }
+        ]
+      }
+    }
+  },
+  "substitutionRules": {
+    "colorTolerance": {
+      "lightMalts": 5.0,
+      "mediumMalts": 10.0,
+      "darkMalts": 20.0
+    },
+    "substitutionGuidelines": [
+      "For base malts (Pilsner, Pale Ale, Munich, Vienna), substitutions within the same category work best",
+      "Crystal/Caramel malts can be substituted with varieties ±20L for similar results", 
+      "Dark malts (Chocolate, Black) have strong flavors - use smaller amounts when substituting up",
+      "Specialty malts (Victory, Special B) significantly impact flavor - consider blend adjustments",
+      "When substituting darker for lighter: reduce quantity by 10-20%",
+      "When substituting lighter for darker: increase quantity by 10-20%",
+      "Always consider the beer style and flavor impact of substitutions"
+    ],
+    "manufacturerEquivalents": {
+      "Weyermann": {
+        "CaraHell": ["Crystal 10", "Caramalt", "Light Carastan"],
+        "CaraMunich I": ["Crystal 30", "Crystal 40"],
+        "CaraMunich II": ["Crystal 60"],
+        "CaraMunich III": ["Crystal 80", "Crystal 90"],
+        "CaraAroma": ["Crystal 120", "Special W"],
+        "Carafa I": ["Pale Chocolate"],
+        "Carafa II": ["Chocolate"],
+        "Carafa III": ["Black Patent"]
+      },
+      "Castle": {
+        "Château Cara Blond": ["Crystal 20", "CaraHell"],
+        "Château Cara Ruby": ["Crystal 50", "CaraRed"],
+        "Château Arôme": ["Crystal 60", "CaraMunich I"],
+        "Château Cara Gold": ["Crystal 120", "CaraMunich II"],
+        "Château Crystal": ["Crystal 150", "CaraMunich III"],
+        "Château Special Belgium": ["Special B", "Special W"]
+      },
+      "Simpsons": {
+        "Caramalt": ["Crystal 30", "CaraHell"],
+        "Medium Crystal": ["Crystal 60", "Crystal 77"],
+        "Dark Crystal": ["Crystal 120", "Crystal 150"],
+        "Crystal Dark": ["Crystal 240", "Crystal 280"],
+        "Extra Dark Crystal": ["Crystal 400"]
+      }
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "sources": [
+      "https://www.brew.is/files/malt.html",
+      "https://humebrew.com/crystal-malt-substitution-list/", 
+      "https://hobbybrouwshop.nl/moutsubstitutie/",
+      "https://www.geterbrewed.com/brewing-grains/malt-substitution-guide/"
+    ],
+    "lastUpdated": "2025-01-06",
+    "description": "Comprehensive malt substitution database compiled from multiple brewing resources"
+  }
+}

@@ -163,61 +163,256 @@ function areInterchangeable(fermentable1, fermentable2) {
     return colorDifference <= maxAllowedDifference;
 }
 
+// Load malt substitution database
+async function loadMaltDatabase() {
+    try {
+        const response = await fetch(chrome.runtime.getURL('malt-substitution-database.json'));
+        return await response.json();
+    } catch (error) {
+        console.warn('Could not load malt substitution database:', error);
+        return null;
+    }
+}
+
+// Find best substitution category for a grain based on name and properties
+function findGrainSubstitutionCategory(grain, maltDatabase) {
+    if (!maltDatabase) return null;
+    
+    const grainName = grain.name.toLowerCase();
+    const grainColor = grain.color || 0;
+    const grainCategory = grain.grainCategory || '';
+    
+    // Helper function to check if grain matches a category
+    const matchesCategory = (categoryData, searchTerms) => {
+        return searchTerms.some(term => grainName.includes(term.toLowerCase()));
+    };
+    
+    // Check base malts first
+    for (const [categoryKey, categoryData] of Object.entries(maltDatabase.maltSubstitutions.baseMalts)) {
+        const searchTerms = [];
+        
+        // Build search terms based on category
+        if (categoryKey.includes('Pilsner')) {
+            searchTerms.push('pilsner', 'pils', 'lager', '2-row', 'pale');
+        } else if (categoryKey.includes('Munich')) {
+            searchTerms.push('munich');
+        } else if (categoryKey.includes('Vienna')) {
+            searchTerms.push('vienna');
+        } else if (categoryKey.includes('Wheat')) {
+            searchTerms.push('wheat', 'weizen');
+        } else if (categoryKey.includes('Rye')) {
+            searchTerms.push('rye');
+        }
+        
+        if (matchesCategory(categoryData, searchTerms) && 
+            grainColor >= categoryData.colorRange.min && 
+            grainColor <= categoryData.colorRange.max) {
+            return { category: categoryKey, data: categoryData, type: 'base' };
+        }
+    }
+    
+    // Check crystal/caramel malts
+    if (grainCategory.toLowerCase().includes('crystal') || grainCategory.toLowerCase().includes('caramel') ||
+        grainName.includes('crystal') || grainName.includes('caramel') || grainName.includes('cara')) {
+        const crystalData = maltDatabase.maltSubstitutions.crystalCaramel['Crystal/Caramel'];
+        if (grainColor >= crystalData.colorRange.min && grainColor <= crystalData.colorRange.max) {
+            return { category: 'Crystal/Caramel', data: crystalData, type: 'crystal' };
+        }
+    }
+    
+    // Check specialty malts
+    for (const [categoryKey, categoryData] of Object.entries(maltDatabase.maltSubstitutions.specialtyMalts)) {
+        const searchTerms = [];
+        
+        if (categoryKey === 'Chocolate') {
+            searchTerms.push('chocolate', 'carafa');
+        } else if (categoryKey === 'Black Patent') {
+            searchTerms.push('black', 'patent', 'carafa iii');
+        } else if (categoryKey === 'Victory') {
+            searchTerms.push('victory', 'amber', 'biscuit');
+        } else if (categoryKey === 'Special B') {
+            searchTerms.push('special b', 'special w');
+        } else if (categoryKey === 'Acidulated') {
+            searchTerms.push('acid', 'sour');
+        } else if (categoryKey === 'Dextrin/CaraPils') {
+            searchTerms.push('dextrin', 'carapils', 'carafoam');
+        }
+        
+        if (matchesCategory(categoryData, searchTerms) && 
+            grainColor >= categoryData.colorRange.min && 
+            grainColor <= categoryData.colorRange.max) {
+            return { category: categoryKey, data: categoryData, type: 'specialty' };
+        }
+    }
+    
+    // Check smoked malts
+    if (grainName.includes('smoked') || grainName.includes('peated') || grainName.includes('rauch')) {
+        const smokedData = maltDatabase.maltSubstitutions.smokedMalts['Smoked'];
+        return { category: 'Smoked', data: smokedData, type: 'smoked' };
+    }
+    
+    return null;
+}
+
+// Enhanced interchangeable check using malt database
+async function areInterchangeableEnhanced(fermentable1, fermentable2, maltDatabase) {
+    // Never combine ingredients from the same recipe
+    if (fermentable1.recipeIds && fermentable2.recipeIds) {
+        const hasCommonRecipe = fermentable1.recipeIds.some(recipeId => 
+            fermentable2.recipeIds.includes(recipeId)
+        );
+        if (hasCommonRecipe) {
+            return false;
+        }
+    }
+    
+    // If we have the malt database, use enhanced logic
+    if (maltDatabase) {
+        const category1 = findGrainSubstitutionCategory(fermentable1, maltDatabase);
+        const category2 = findGrainSubstitutionCategory(fermentable2, maltDatabase);
+        
+        // Both must be in the same substitution category
+        if (!category1 || !category2 || category1.category !== category2.category) {
+            return false;
+        }
+        
+        // Check color tolerance based on malt type
+        const color1 = fermentable1.color || 0;
+        const color2 = fermentable2.color || 0;
+        const rules = maltDatabase.substitutionRules.colorTolerance;
+        
+        let tolerance;
+        if (color1 <= 10) {
+            tolerance = rules.lightMalts;
+        } else if (color1 <= 100) {
+            tolerance = rules.mediumMalts;
+        } else {
+            tolerance = rules.darkMalts;
+        }
+        
+        const colorDifference = Math.abs(color1 - color2);
+        return colorDifference <= tolerance;
+    }
+    
+    // Fallback to original logic if database not available
+    return areInterchangeable(fermentable1, fermentable2);
+}
+
 // Find substitution suggestions for ingredients in shopping list
-function findSubstitutions(shoppingList) {
+async function findSubstitutions(shoppingList) {
     const fermentables = shoppingList.filter(item => item.type === 'fermentable');
     const substitutions = [];
     
-    // Group fermentables by grain category for easier comparison
-    const categoryGroups = {};
-    fermentables.forEach(fermentable => {
-        const category = fermentable.grainCategory;
-        if (!categoryGroups[category]) {
-            categoryGroups[category] = [];
-        }
-        categoryGroups[category].push(fermentable);
-    });
+    // Load malt database for enhanced substitution logic
+    const maltDatabase = await loadMaltDatabase();
     
-    // Find interchangeable ingredients within each category
-    Object.entries(categoryGroups).forEach(([category, grains]) => {
-        if (grains.length > 1) {
-            // Compare each grain with others in the same category
-            for (let i = 0; i < grains.length; i++) {
-                for (let j = i + 1; j < grains.length; j++) {
-                    const grain1 = grains[i];
-                    const grain2 = grains[j];
-                    
-                    if (areInterchangeable(grain1, grain2)) {
-                        // Check if this substitution group already exists
-                        let existingGroup = substitutions.find(group => 
-                            group.ingredients.some(ing => ing.id === grain1.id || ing.id === grain2.id)
-                        );
+    if (maltDatabase) {
+        // Enhanced logic using malt database
+        const categoryGroups = {};
+        
+        // Group fermentables by substitution category from database
+        for (const fermentable of fermentables) {
+            const categoryInfo = findGrainSubstitutionCategory(fermentable, maltDatabase);
+            const categoryKey = categoryInfo ? categoryInfo.category : fermentable.grainCategory;
+            
+            if (!categoryGroups[categoryKey]) {
+                categoryGroups[categoryKey] = [];
+            }
+            categoryGroups[categoryKey].push(fermentable);
+        }
+        
+        // Find interchangeable ingredients within each category
+        for (const [category, grains] of Object.entries(categoryGroups)) {
+            if (grains.length > 1) {
+                // Compare each grain with others in the same category
+                for (let i = 0; i < grains.length; i++) {
+                    for (let j = i + 1; j < grains.length; j++) {
+                        const grain1 = grains[i];
+                        const grain2 = grains[j];
                         
-                        if (existingGroup) {
-                            // Add to existing group if not already present
-                            if (!existingGroup.ingredients.some(ing => ing.id === grain1.id)) {
-                                existingGroup.ingredients.push(grain1);
-                                existingGroup.totalAmount += grain1.amount;
+                        if (await areInterchangeableEnhanced(grain1, grain2, maltDatabase)) {
+                            // Check if this substitution group already exists
+                            let existingGroup = substitutions.find(group => 
+                                group.ingredients.some(ing => ing.id === grain1.id || ing.id === grain2.id)
+                            );
+                            
+                            if (existingGroup) {
+                                // Add to existing group if not already present
+                                if (!existingGroup.ingredients.some(ing => ing.id === grain1.id)) {
+                                    existingGroup.ingredients.push(grain1);
+                                    existingGroup.totalAmount += grain1.amount;
+                                }
+                                if (!existingGroup.ingredients.some(ing => ing.id === grain2.id)) {
+                                    existingGroup.ingredients.push(grain2);
+                                    existingGroup.totalAmount += grain2.amount;
+                                }
+                            } else {
+                                // Create new substitution group
+                                substitutions.push({
+                                    id: `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                                    category: category,
+                                    ingredients: [grain1, grain2],
+                                    totalAmount: grain1.amount + grain2.amount,
+                                    unit: grain1.unit
+                                });
                             }
-                            if (!existingGroup.ingredients.some(ing => ing.id === grain2.id)) {
-                                existingGroup.ingredients.push(grain2);
-                                existingGroup.totalAmount += grain2.amount;
-                            }
-                        } else {
-                            // Create new substitution group
-                            substitutions.push({
-                                id: `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                                category: category,
-                                ingredients: [grain1, grain2],
-                                totalAmount: grain1.amount + grain2.amount,
-                                unit: grain1.unit
-                            });
                         }
                     }
                 }
             }
         }
-    });
+    } else {
+        // Fallback to original logic if database not available
+        const categoryGroups = {};
+        fermentables.forEach(fermentable => {
+            const category = fermentable.grainCategory;
+            if (!categoryGroups[category]) {
+                categoryGroups[category] = [];
+            }
+            categoryGroups[category].push(fermentable);
+        });
+        
+        // Find interchangeable ingredients within each category
+        Object.entries(categoryGroups).forEach(([category, grains]) => {
+            if (grains.length > 1) {
+                // Compare each grain with others in the same category
+                for (let i = 0; i < grains.length; i++) {
+                    for (let j = i + 1; j < grains.length; j++) {
+                        const grain1 = grains[i];
+                        const grain2 = grains[j];
+                        
+                        if (areInterchangeable(grain1, grain2)) {
+                            // Check if this substitution group already exists
+                            let existingGroup = substitutions.find(group => 
+                                group.ingredients.some(ing => ing.id === grain1.id || ing.id === grain2.id)
+                            );
+                            
+                            if (existingGroup) {
+                                // Add to existing group if not already present
+                                if (!existingGroup.ingredients.some(ing => ing.id === grain1.id)) {
+                                    existingGroup.ingredients.push(grain1);
+                                    existingGroup.totalAmount += grain1.amount;
+                                }
+                                if (!existingGroup.ingredients.some(ing => ing.id === grain2.id)) {
+                                    existingGroup.ingredients.push(grain2);
+                                    existingGroup.totalAmount += grain2.amount;
+                                }
+                            } else {
+                                // Create new substitution group
+                                substitutions.push({
+                                    id: `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                                    category: category,
+                                    ingredients: [grain1, grain2],
+                                    totalAmount: grain1.amount + grain2.amount,
+                                    unit: grain1.unit
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
     
     return substitutions;
 }
@@ -353,7 +548,7 @@ async function applyMultipleSubstitutions(substitutionsToApply) {
 // Generate new substitutions when shopping list changes
 async function updateSubstitutions() {
     const shoppingList = await getShoppingList();
-    const substitutions = findSubstitutions(shoppingList);
+    const substitutions = await findSubstitutions(shoppingList);
     await saveSubstitutions(substitutions);
     return substitutions;
 }
