@@ -620,7 +620,21 @@ body {
 }
 
 .substitution-advice .usage-advice {
+    margin-bottom: 4px;
     color: var(--text-secondary);
+}
+
+.substitution-advice .technical-data {
+    margin-bottom: 4px;
+    color: var(--text-secondary);
+    font-size: 10px;
+}
+
+.substitution-advice .manufacturer-equivalents {
+    margin-bottom: 2px;
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-style: italic;
 }
 
 .substitution-advice strong {

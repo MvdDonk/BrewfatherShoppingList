@@ -601,6 +601,14 @@ async function getSubstitutionAdvice(ingredient) {
         const grainColor = ingredient.color || 0;
         const grainCategory = ingredient.grainCategory || '';
         
+        // Get manufacturer equivalents
+        const manufacturerEquivs = findManufacturerEquivalentsInDB(ingredient.name, database);
+        
+        // Get technical brewing data
+        const technicalData = getTechnicalBrewingData(grainColor, grainCategory, database);
+        
+        let substitutionInfo = null;
+        
         // Check if it's a crystal/caramel malt
         if (grainCategory.toLowerCase().includes('crystal') || grainCategory.toLowerCase().includes('caramel') ||
             grainName.includes('crystal') || grainName.includes('caramel') || grainName.includes('cara')) {
@@ -613,7 +621,7 @@ async function getSubstitutionAdvice(ingredient) {
                 );
                 
                 if (matchingRange) {
-                    return {
+                    substitutionInfo = {
                         flavorImpact: matchingRange.flavorImpact || matchingRange.notes,
                         usage: matchingRange.usage || "Standard 1:1 replacement",
                         notes: matchingRange.notes
@@ -623,49 +631,123 @@ async function getSubstitutionAdvice(ingredient) {
         }
         
         // Check base malts
-        for (const [categoryKey, categoryData] of Object.entries(database.maltSubstitutions.baseMalts)) {
-            if ((categoryKey.includes('Pilsner') && (grainName.includes('pilsner') || grainName.includes('lager'))) ||
-                (categoryKey.includes('Munich') && grainName.includes('munich')) ||
-                (categoryKey.includes('Vienna') && grainName.includes('vienna'))) {
-                
-                const matchingSubstitution = categoryData.substitutions.find(sub => 
-                    grainColor >= sub.colorRange.min && grainColor <= sub.colorRange.max
-                );
-                
-                if (matchingSubstitution) {
-                    return {
-                        flavorImpact: matchingSubstitution.flavorImpact || matchingSubstitution.notes,
-                        usage: matchingSubstitution.usage || "Standard 1:1 replacement", 
-                        notes: matchingSubstitution.notes
-                    };
+        if (!substitutionInfo) {
+            for (const [categoryKey, categoryData] of Object.entries(database.maltSubstitutions.baseMalts)) {
+                if ((categoryKey.includes('Pilsner') && (grainName.includes('pilsner') || grainName.includes('lager'))) ||
+                    (categoryKey.includes('Munich') && grainName.includes('munich')) ||
+                    (categoryKey.includes('Vienna') && grainName.includes('vienna'))) {
+                    
+                    const matchingSubstitution = categoryData.substitutions.find(sub => 
+                        grainColor >= sub.colorRange.min && grainColor <= sub.colorRange.max
+                    );
+                    
+                    if (matchingSubstitution) {
+                        substitutionInfo = {
+                            flavorImpact: matchingSubstitution.flavorImpact || matchingSubstitution.notes,
+                            usage: matchingSubstitution.usage || "Standard 1:1 replacement", 
+                            notes: matchingSubstitution.notes
+                        };
+                        break;
+                    }
                 }
             }
         }
         
         // Check specialty malts
-        for (const [categoryKey, categoryData] of Object.entries(database.maltSubstitutions.specialtyMalts)) {
-            if ((categoryKey === 'Chocolate' && grainName.includes('chocolate')) ||
-                (categoryKey === 'Victory' && grainName.includes('victory'))) {
-                
-                const matchingSubstitution = categoryData.substitutions.find(sub => 
-                    grainColor >= sub.colorRange.min && grainColor <= sub.colorRange.max
-                );
-                
-                if (matchingSubstitution) {
-                    return {
-                        flavorImpact: matchingSubstitution.flavorImpact || matchingSubstitution.notes,
-                        usage: matchingSubstitution.usage || "Standard 1:1 replacement",
-                        notes: matchingSubstitution.notes
-                    };
+        if (!substitutionInfo) {
+            for (const [categoryKey, categoryData] of Object.entries(database.maltSubstitutions.specialtyMalts)) {
+                if ((categoryKey === 'Chocolate' && grainName.includes('chocolate')) ||
+                    (categoryKey === 'Victory' && grainName.includes('victory'))) {
+                    
+                    const matchingSubstitution = categoryData.substitutions.find(sub => 
+                        grainColor >= sub.colorRange.min && grainColor <= sub.colorRange.max
+                    );
+                    
+                    if (matchingSubstitution) {
+                        substitutionInfo = {
+                            flavorImpact: matchingSubstitution.flavorImpact || matchingSubstitution.notes,
+                            usage: matchingSubstitution.usage || "Standard 1:1 replacement",
+                            notes: matchingSubstitution.notes
+                        };
+                        break;
+                    }
                 }
             }
         }
         
-        return null;
+        // Combine all information
+        return {
+            ...substitutionInfo,
+            manufacturerEquivalents: manufacturerEquivs,
+            technicalData: technicalData
+        };
+        
     } catch (error) {
         console.warn('Could not load substitution advice:', error);
         return null;
     }
+}
+
+// Helper function to find manufacturer equivalents
+function findManufacturerEquivalentsInDB(grainName, database) {
+    if (!database.manufacturerEquivalents) return [];
+    
+    const equivalents = [];
+    const grainNameLower = grainName.toLowerCase();
+    
+    for (const [manufacturer, products] of Object.entries(database.manufacturerEquivalents)) {
+        for (const [productName, alternatives] of Object.entries(products)) {
+            // Check if the grain matches this product
+            if (grainNameLower.includes(productName.toLowerCase()) || 
+                productName.toLowerCase().includes(grainNameLower.split(' ')[0])) {
+                alternatives.slice(0, 3).forEach(alt => { // Limit to 3 alternatives
+                    equivalents.push({
+                        manufacturer: manufacturer,
+                        alternative: alt
+                    });
+                });
+            }
+        }
+    }
+    
+    return equivalents.slice(0, 5); // Limit total to 5 equivalents
+}
+
+// Helper function to get technical brewing data
+function getTechnicalBrewingData(grainColor, grainCategory, database) {
+    if (!database.technicalData) return null;
+    
+    const technical = database.technicalData;
+    
+    // Determine diastatic power category
+    let diastaticPower = 'low';
+    if (grainCategory.toLowerCase().includes('base') || 
+        grainCategory.toLowerCase().includes('pilsner') ||
+        grainCategory.toLowerCase().includes('pale')) {
+        diastaticPower = 'high';
+    } else if (grainCategory.toLowerCase().includes('munich') ||
+               grainCategory.toLowerCase().includes('vienna')) {
+        diastaticPower = 'medium';
+    } else if (grainColor > 200) {
+        diastaticPower = 'none';
+    }
+    
+    // Determine max batch percentage
+    let maxBatch = '5-15%';
+    if (grainCategory.toLowerCase().includes('base')) {
+        maxBatch = '80-100%';
+    } else if (grainColor > 500) {
+        maxBatch = '1-3%';
+    } else if (grainColor > 200) {
+        maxBatch = '1-5%';
+    } else if (grainColor > 100) {
+        maxBatch = '2-10%';
+    }
+    
+    return {
+        diastaticPower: technical.diastaticPower.ranges[diastaticPower] || technical.diastaticPower.ranges.low,
+        maxBatchPercentage: maxBatch
+    };
 }
 
 // Helper function to format color for display
@@ -702,12 +784,37 @@ async function createSubstitutionItem(substitution) {
         // Build advice display
         let adviceDisplay = '';
         if (substitutionAdvice) {
-            adviceDisplay = `
-                <div class="substitution-advice">
-                    ${substitutionAdvice.flavorImpact ? `<div class="flavor-impact"><strong>Flavor:</strong> ${substitutionAdvice.flavorImpact}</div>` : ''}
-                    ${substitutionAdvice.usage ? `<div class="usage-advice"><strong>Usage:</strong> ${substitutionAdvice.usage}</div>` : ''}
-                </div>
-            `;
+            let adviceContent = '';
+            
+            // Basic flavor and usage advice
+            if (substitutionAdvice.flavorImpact) {
+                adviceContent += `<div class="flavor-impact"><strong>Flavor:</strong> ${substitutionAdvice.flavorImpact}</div>`;
+            }
+            if (substitutionAdvice.usage) {
+                adviceContent += `<div class="usage-advice"><strong>Usage:</strong> ${substitutionAdvice.usage}</div>`;
+            }
+            
+            // Technical brewing data
+            if (substitutionAdvice.technicalData) {
+                adviceContent += `<div class="technical-data">
+                    <strong>Technical:</strong> Max ${substitutionAdvice.technicalData.maxBatchPercentage}, ${substitutionAdvice.technicalData.diastaticPower}
+                </div>`;
+            }
+            
+            // Manufacturer equivalents
+            if (substitutionAdvice.manufacturerEquivalents && substitutionAdvice.manufacturerEquivalents.length > 0) {
+                const equivalents = substitutionAdvice.manufacturerEquivalents
+                    .slice(0, 3) // Limit to 3 to avoid clutter
+                    .map(eq => `${eq.manufacturer}: ${eq.alternative}`)
+                    .join(', ');
+                adviceContent += `<div class="manufacturer-equivalents">
+                    <strong>Equivalents:</strong> ${equivalents}
+                </div>`;
+            }
+            
+            if (adviceContent) {
+                adviceDisplay = `<div class="substitution-advice">${adviceContent}</div>`;
+            }
         }
         
         ingredientOptions.push(`

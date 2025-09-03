@@ -360,6 +360,55 @@
       "When substituting lighter for darker: increase quantity by 10-20%",
       "Always consider the beer style and flavor impact of substitutions"
     ],
+    "substitutionRatios": {
+      "colorAdjustments": {
+        "lighterSubstitute": {
+          "ratio": 1.1,
+          "description": "Use 10% more when substituting lighter malt for darker"
+        },
+        "darkerSubstitute": {
+          "ratio": 0.9,
+          "description": "Use 10% less when substituting darker malt for lighter"
+        }
+      },
+      "manufacturerRatios": {
+        "Gladfield": {
+          "Amber_to_Biscuit": 1.8,
+          "Medium_Crystal_to_Dark": 1.2,
+          "Munich_to_Bonlander": 1.2,
+          "Crystal10_to_Light": 0.5,
+          "Midnight_to_Roasted": 3.0,
+          "Special_Roast_blend": 2.0
+        },
+        "generalGuidelines": {
+          "crystal_upSubstitution": 0.8,
+          "crystal_downSubstitution": 1.2,
+          "specialty_conservative": 0.75
+        }
+      }
+    },
+    "technicalData": {
+      "diastaticPower": {
+        "description": "Enzymatic activity for starch conversion (Lintner degrees)",
+        "ranges": {
+          "high": ">140°L (Base malts like 2-Row, 6-Row)",
+          "medium": "50-140°L (Munich, Vienna)",
+          "low": "<50°L (Crystal, Specialty malts)",
+          "none": "0°L (Roasted malts)"
+        }
+      },
+      "maxBatchPercentage": {
+        "description": "Recommended maximum percentage in grain bill",
+        "guidelines": {
+          "baseMalts": "80-100% (Pilsner, Pale Ale, Munich)",
+          "crystalMalts": "5-15% (Crystal 30-120)",
+          "darkCrystal": "2-10% (Crystal 150+)",
+          "chocolateMalts": "1-5% (Chocolate, Light Chocolate)",
+          "roastedMalts": "1-3% (Black, Roasted Barley)",
+          "specialtyMalts": "5-20% (Victory, Biscuit, Vienna)"
+        }
+      }
+    },
     "manufacturerEquivalents": {
       "Weyermann": {
         "CaraHell": ["Crystal 10", "Caramalt", "Light Carastan"],
@@ -369,7 +418,13 @@
         "CaraAroma": ["Crystal 120", "Special W"],
         "Carafa I": ["Pale Chocolate"],
         "Carafa II": ["Chocolate"],
-        "Carafa III": ["Black Patent"]
+        "Carafa III": ["Black Patent"],
+        "Bohemian Pilsner": ["Pilsner Malt", "Premium Pilsner"],
+        "Munich I": ["Munich Light", "Munich Malt"],
+        "Vienna": ["Vienna Malt"],
+        "Acidulated Malt": ["Sour Malt"],
+        "Melanoidin Malt": ["Aromatic Malt", "Biscuit Malt"],
+        "Smoked Malt": ["Manuka Smoked", "Mild Peat Smoked"]
       },
       "Castle": {
         "Château Cara Blond": ["Crystal 20", "CaraHell"],
@@ -384,19 +439,105 @@
         "Medium Crystal": ["Crystal 60", "Crystal 77"],
         "Dark Crystal": ["Crystal 120", "Crystal 150"],
         "Crystal Dark": ["Crystal 240", "Crystal 280"],
-        "Extra Dark Crystal": ["Crystal 400"]
+        "Extra Dark Crystal": ["Crystal 400"],
+        "Golden Promise": ["Ale Malt", "Maris Otter"],
+        "Marris Otter": ["Ale Malt", "Golden Promise"],
+        "Amber Malt": ["Biscuit Malt"],
+        "Aromatic Malt": ["Aurora Malt", "Melanoidin"],
+        "Imperial Malt": ["Munich Malt"],
+        "Peated Malt": ["Mild Peat Smoked"]
+      },
+      "Gladfield": {
+        "Ale Malt": ["Marris Otter", "Golden Promise", "Pale Ale Malt"],
+        "American Ale Malt": ["2-Row Base", "Pale Ale Malt"],
+        "Pilsner Malt": ["Premium Pilsner", "Bohemian Pilsner"],
+        "Munich Malt": ["Munich I", "Munich Light"],
+        "Vienna Malt": ["Vienna Malt"],
+        "Light Crystal Malt": ["Crystal 30", "Crystal 40", "CaraHell"],
+        "Medium Crystal Malt": ["Crystal 60", "Crystal 80"],
+        "Dark Crystal Malt": ["Crystal 120", "Crystal 150"],
+        "Light Chocolate Malt": ["Pale Chocolate", "Carafa I"],
+        "Dark Chocolate Malt": ["Chocolate", "Carafa II"],
+        "Aurora Malt": ["Aromatic", "Melanoidin"],
+        "Biscuit Malt": ["Amber Malt", "Victory Malt"],
+        "Brown Malt": ["Brown Malt"],
+        "Roasted Barley": ["Roast Barley"],
+        "Wheat Malt": ["White Wheat", "Red Wheat"],
+        "Manuka Smoked Malt": ["Smoked Malt", "Peated Malt"]
+      },
+      "Briess": {
+        "2-Row Base": ["American Ale Malt", "Premium 2-Row"],
+        "Caramel 10L": ["Crystal 25", "Light Crystal"],
+        "Caramel 30L": ["Crystal 40"],
+        "Caramel 40L": ["Crystal 60"],
+        "Caramel 60L": ["Crystal 80"],
+        "Caramel 80L": ["Crystal 100"],
+        "Caramel 120L": ["Crystal 150", "Dark Crystal"],
+        "Munich Malt": ["Bonlander Munich"],
+        "Victory Malt": ["Biscuit Malt"],
+        "Special Roast": ["Aurora Malt", "Biscuit blend"],
+        "Dark Chocolate": ["Light Chocolate", "Dark Chocolate"],
+        "Midnight Wheat": ["Roasted Wheat"]
+      },
+      "Bairds": {
+        "Marris Otter": ["Ale Malt", "Golden Promise"],
+        "Golden Promise": ["Ale Malt", "Marris Otter"],
+        "Pale Ale": ["American Ale Malt"],
+        "Premium Pilsen": ["Pilsner Malt"],
+        "CaraMalt": ["Light Crystal"],
+        "Medium Crystal": ["Crystal 60"],
+        "Dark Crystal": ["Crystal 120"],
+        "Amber Malt": ["Biscuit Malt"],
+        "Brown Malt": ["Brown Malt"],
+        "Chocolate": ["Dark Chocolate"],
+        "Black Malt": ["Dark Chocolate"]
+      },
+      "Fawcetts": {
+        "Maris Otter Pale Ale": ["Ale Malt"],
+        "Golden Promise Pale Ale": ["American Ale Malt"],
+        "Caramalt": ["Light Crystal", "Toffee Malt"],
+        "Medium Crystal": ["Crystal 80"],
+        "Dark Crystal": ["Crystal 150"],
+        "Pale Crystal": ["Crystal 40"],
+        "Amber": ["Biscuit Malt"],
+        "Brown Malt": ["Brown Malt"],
+        "Chocolate": ["Light Chocolate"],
+        "Black": ["Dark Chocolate"],
+        "Wheat Malt": ["Wheat Malt"]
+      },
+      "Swaen": {
+        "Pilsner": ["Pilsner Malt"],
+        "Pale Ale": ["Ale Malt"],
+        "Munich": ["Munich Malt"],
+        "Vienna": ["Vienna Malt"],
+        "Wheat": ["Wheat Malt"],
+        "Crystal 30": ["Light Crystal"],
+        "Crystal 60": ["Medium Crystal"],
+        "Crystal 120": ["Dark Crystal"],
+        "Chocolate": ["Light Chocolate"],
+        "Black": ["Dark Chocolate"]
       }
     }
   },
   "metadata": {
-    "version": "1.0",
+    "version": "2.0",
     "sources": [
       "https://www.brew.is/files/malt.html",
       "https://humebrew.com/crystal-malt-substitution-list/", 
       "https://hobbybrouwshop.nl/moutsubstitutie/",
-      "https://www.geterbrewed.com/brewing-grains/malt-substitution-guide/"
+      "https://www.geterbrewed.com/brewing-grains/malt-substitution-guide/",
+      "https://pivovarium.si/nadomestki-za-slad-the-swaen/",
+      "https://grainmother.com/malt-substitution-chart-for-homebrewers/",
+      "https://beermaverick.com/grain-adjuncts-chart/",
+      "https://www.gladfieldmalt.co.nz/malt-alternative-swap-to-gladfield-malts"
     ],
     "lastUpdated": "2025-01-06",
-    "description": "Comprehensive malt substitution database compiled from multiple brewing resources"
+    "description": "Comprehensive malt substitution database compiled from multiple brewing resources including manufacturer cross-references, technical brewing data, and professional brewing guidelines",
+    "enhancements": [
+      "Added manufacturer equivalents for Gladfield, Briess, Bairds, Fawcetts, and Swaen",
+      "Included technical brewing data (diastatic power, max batch percentages)",
+      "Added substitution ratios from professional brewing sources",
+      "Enhanced with New Zealand and European brewing data"
+    ]
   }
 }

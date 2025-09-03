@@ -163,6 +163,87 @@ function areInterchangeable(fermentable1, fermentable2) {
     return colorDifference <= maxAllowedDifference;
 }
 
+// Find manufacturer equivalents for a grain
+function findManufacturerEquivalents(grainName, maltDatabase) {
+    if (!maltDatabase || !maltDatabase.manufacturerEquivalents) {
+        return [];
+    }
+    
+    const equivalents = [];
+    const grainNameLower = grainName.toLowerCase();
+    
+    // Search through all manufacturer equivalents
+    for (const [manufacturer, products] of Object.entries(maltDatabase.manufacturerEquivalents)) {
+        for (const [productName, alternatives] of Object.entries(products)) {
+            // Check if the grain matches this product
+            if (grainNameLower.includes(productName.toLowerCase()) || 
+                productName.toLowerCase().includes(grainNameLower)) {
+                alternatives.forEach(alt => {
+                    equivalents.push({
+                        manufacturer: manufacturer,
+                        original: productName,
+                        alternative: alt,
+                        confidence: 'high'
+                    });
+                });
+            }
+            
+            // Check if the grain matches any of the alternatives
+            alternatives.forEach(alt => {
+                if (grainNameLower.includes(alt.toLowerCase()) || 
+                    alt.toLowerCase().includes(grainNameLower)) {
+                    equivalents.push({
+                        manufacturer: manufacturer,
+                        original: alt,
+                        alternative: productName,
+                        confidence: 'medium'
+                    });
+                }
+            });
+        }
+    }
+    
+    return equivalents;
+}
+
+// Calculate substitution ratio based on database
+function calculateSubstitutionRatio(grain1, grain2, maltDatabase) {
+    if (!maltDatabase || !maltDatabase.substitutionRatios) {
+        return 1.0; // Default 1:1 ratio
+    }
+    
+    const color1 = grain1.color || 0;
+    const color2 = grain2.color || 0;
+    const ratios = maltDatabase.substitutionRatios;
+    
+    // Check for specific manufacturer ratios first
+    const manufacturer1 = grain1.supplier || '';
+    const manufacturer2 = grain2.supplier || '';
+    
+    if (ratios.manufacturerRatios && ratios.manufacturerRatios[manufacturer1]) {
+        const mfgRatios = ratios.manufacturerRatios[manufacturer1];
+        // Look for specific grain substitution ratios
+        for (const [key, ratio] of Object.entries(mfgRatios)) {
+            if (typeof ratio === 'number' && 
+                (grain1.name.toLowerCase().includes(key.toLowerCase()) || 
+                 grain2.name.toLowerCase().includes(key.toLowerCase()))) {
+                return ratio;
+            }
+        }
+    }
+    
+    // Apply color-based adjustments
+    if (color1 > color2) {
+        // Substituting darker for lighter
+        return ratios.colorAdjustments?.darkerSubstitute?.ratio || 0.9;
+    } else if (color2 > color1) {
+        // Substituting lighter for darker
+        return ratios.colorAdjustments?.lighterSubstitute?.ratio || 1.1;
+    }
+    
+    return 1.0; // Same color, 1:1 ratio
+}
+
 // Load malt substitution database
 async function loadMaltDatabase() {
     try {
