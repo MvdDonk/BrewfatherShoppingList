@@ -587,6 +587,87 @@ async function displaySubstitutions(substitutions) {
     }
 }
 
+// Helper function to get substitution advice from database
+async function getSubstitutionAdvice(ingredient) {
+    try {
+        const response = await fetch(chrome.runtime.getURL('malt-substitution-database.json'));
+        const database = await response.json();
+        
+        if (!database || ingredient.type !== 'fermentable') {
+            return null;
+        }
+        
+        const grainName = ingredient.name.toLowerCase();
+        const grainColor = ingredient.color || 0;
+        const grainCategory = ingredient.grainCategory || '';
+        
+        // Check if it's a crystal/caramel malt
+        if (grainCategory.toLowerCase().includes('crystal') || grainCategory.toLowerCase().includes('caramel') ||
+            grainName.includes('crystal') || grainName.includes('caramel') || grainName.includes('cara')) {
+            
+            const crystalData = database.maltSubstitutions.crystalCaramel['Crystal/Caramel'];
+            if (crystalData && crystalData.substitutions) {
+                // Find the best matching range
+                const matchingRange = crystalData.substitutions.find(sub => 
+                    grainColor >= sub.colorRange.min && grainColor <= sub.colorRange.max
+                );
+                
+                if (matchingRange) {
+                    return {
+                        flavorImpact: matchingRange.flavorImpact || matchingRange.notes,
+                        usage: matchingRange.usage || "Standard 1:1 replacement",
+                        notes: matchingRange.notes
+                    };
+                }
+            }
+        }
+        
+        // Check base malts
+        for (const [categoryKey, categoryData] of Object.entries(database.maltSubstitutions.baseMalts)) {
+            if ((categoryKey.includes('Pilsner') && (grainName.includes('pilsner') || grainName.includes('lager'))) ||
+                (categoryKey.includes('Munich') && grainName.includes('munich')) ||
+                (categoryKey.includes('Vienna') && grainName.includes('vienna'))) {
+                
+                const matchingSubstitution = categoryData.substitutions.find(sub => 
+                    grainColor >= sub.colorRange.min && grainColor <= sub.colorRange.max
+                );
+                
+                if (matchingSubstitution) {
+                    return {
+                        flavorImpact: matchingSubstitution.flavorImpact || matchingSubstitution.notes,
+                        usage: matchingSubstitution.usage || "Standard 1:1 replacement", 
+                        notes: matchingSubstitution.notes
+                    };
+                }
+            }
+        }
+        
+        // Check specialty malts
+        for (const [categoryKey, categoryData] of Object.entries(database.maltSubstitutions.specialtyMalts)) {
+            if ((categoryKey === 'Chocolate' && grainName.includes('chocolate')) ||
+                (categoryKey === 'Victory' && grainName.includes('victory'))) {
+                
+                const matchingSubstitution = categoryData.substitutions.find(sub => 
+                    grainColor >= sub.colorRange.min && grainColor <= sub.colorRange.max
+                );
+                
+                if (matchingSubstitution) {
+                    return {
+                        flavorImpact: matchingSubstitution.flavorImpact || matchingSubstitution.notes,
+                        usage: matchingSubstitution.usage || "Standard 1:1 replacement",
+                        notes: matchingSubstitution.notes
+                    };
+                }
+            }
+        }
+        
+        return null;
+    } catch (error) {
+        console.warn('Could not load substitution advice:', error);
+        return null;
+    }
+}
+
 // Helper function to format color for display
 async function formatColorForDisplay(color, type) {
     if (!color || type !== 'fermentable') {
@@ -611,11 +692,23 @@ async function createSubstitutionItem(substitution) {
     const categoryName = substitution.category || 'Unknown Category';
     const totalAmount = formatAmount(substitution.totalAmount, substitution.unit);
     
-    // Process ingredients with async color conversion
+    // Process ingredients with async color conversion and substitution advice
     const ingredientOptions = [];
     for (let index = 0; index < substitution.ingredients.length; index++) {
         const ingredient = substitution.ingredients[index];
         const colorDisplay = await formatColorForDisplay(ingredient.color, ingredient.type);
+        const substitutionAdvice = await getSubstitutionAdvice(ingredient);
+        
+        // Build advice display
+        let adviceDisplay = '';
+        if (substitutionAdvice) {
+            adviceDisplay = `
+                <div class="substitution-advice">
+                    ${substitutionAdvice.flavorImpact ? `<div class="flavor-impact"><strong>Flavor:</strong> ${substitutionAdvice.flavorImpact}</div>` : ''}
+                    ${substitutionAdvice.usage ? `<div class="usage-advice"><strong>Usage:</strong> ${substitutionAdvice.usage}</div>` : ''}
+                </div>
+            `;
+        }
         
         ingredientOptions.push(`
             <label class="substitution-option" data-ingredient-id="${ingredient.id}">
@@ -627,6 +720,7 @@ async function createSubstitutionItem(substitution) {
                         ${ingredient.origin || i18n.t('common.origin')}
                         ${ingredient.recipeNames ? `<br>${i18n.t('substitutions.from', { recipes: ingredient.recipeNames.join(', ') })}` : ''}
                     </div>
+                    ${adviceDisplay}
                 </div>
             </label>
         `);

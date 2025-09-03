@@ -9,22 +9,30 @@
           {
             "name": "2-Row Pale",
             "colorRange": { "min": 1.4, "max": 4.0 },
-            "notes": "Very close substitute, may need slight color adjustment"
+            "notes": "Very close substitute, may need slight color adjustment",
+            "flavorImpact": "Neutral, clean malty flavor",
+            "usage": "Direct 1:1 replacement, excellent for all beer styles"
           },
           {
             "name": "Lager Malt",
             "colorRange": { "min": 2.0, "max": 4.0 },
-            "notes": "Direct substitute"
+            "notes": "Direct substitute",
+            "flavorImpact": "Clean, neutral base with subtle malty sweetness",
+            "usage": "Perfect 1:1 replacement for Pilsner malt"
           },
           {
             "name": "Pale Ale Malt",
             "colorRange": { "min": 4.0, "max": 7.0 },
-            "notes": "Slightly darker, will add more body and flavor"
+            "notes": "Slightly darker, will add more body and flavor",
+            "flavorImpact": "More pronounced malty character, slightly toasty",
+            "usage": "Use 10-15% less if color is critical, adds complexity"
           },
           {
             "name": "Extra Pale Malt",
             "colorRange": { "min": 2.0, "max": 3.5 },
-            "notes": "Lighter option"
+            "notes": "Lighter option",
+            "flavorImpact": "Very clean, minimal malt character",
+            "usage": "Ideal for light lagers and wheat beers, 1:1 replacement"
           }
         ]
       },
@@ -36,22 +44,30 @@
           {
             "name": "Vienna Malt",
             "colorRange": { "min": 4.0, "max": 10.0 },
-            "notes": "Lighter but similar malty character"
+            "notes": "Lighter but similar malty character",
+            "flavorImpact": "Toasty, bread-like flavors, golden color contribution",
+            "usage": "Use 10-20% more for similar depth, great for Oktoberfest styles"
           },
           {
             "name": "Munich I (Light)",
             "colorRange": { "min": 12.0, "max": 18.0 },
-            "notes": "Direct substitute for light Munich"
+            "notes": "Direct substitute for light Munich",
+            "flavorImpact": "Rich malty sweetness, honey-like character",
+            "usage": "Perfect 1:1 replacement, enhances malt backbone"
           },
           {
             "name": "Munich II (Dark)",
             "colorRange": { "min": 20.0, "max": 25.0 },
-            "notes": "Darker Munich variety"
+            "notes": "Darker Munich variety",
+            "flavorImpact": "Intense malty flavor, amber color, slight caramel notes",
+            "usage": "Use 15-20% less if color is concern, powerful malt character"
           },
           {
             "name": "Pale Ale + Crystal 40",
             "colorRange": { "min": 15.0, "max": 25.0 },
-            "notes": "Mix 80% Pale Ale + 20% Crystal 40 for similar color/flavor"
+            "notes": "Mix 80% Pale Ale + 20% Crystal 40 for similar color/flavor",
+            "flavorImpact": "Complex blend: base malt character + crystal sweetness",
+            "usage": "Good alternative when Munich unavailable, experiment with ratios"
           }
         ]
       },
@@ -127,37 +143,49 @@
             "name": "Crystal 10-20L",
             "colorRange": { "min": 10.0, "max": 27.0 },
             "notes": "CaraHell, CaraPils, Light Carastan",
-            "equivalents": ["CaraHell", "CaraPils", "Caramalt", "Light Carastan"]
+            "equivalents": ["CaraHell", "CaraPils", "Caramalt", "Light Carastan"],
+            "flavorImpact": "Very light sweetness, body enhancement, minimal color",
+            "usage": "Perfect for light ales, adds mouthfeel without overpowering"
           },
           {
             "name": "Crystal 30-40L",
             "colorRange": { "min": 25.0, "max": 60.0 },
             "notes": "CaraMunich I, CaraAmber, Carastan",
-            "equivalents": ["CaraMunich I", "CaraAmber", "Carastan", "Medium Caramel"]
+            "equivalents": ["CaraMunich I", "CaraAmber", "Carastan", "Medium Caramel"],
+            "flavorImpact": "Light caramel sweetness, golden to amber color",
+            "usage": "Great for IPAs and pale ales, balances hop bitterness"
           },
           {
             "name": "Crystal 60L",
             "colorRange": { "min": 60.0, "max": 80.0 },
             "notes": "CaraMunich III, Medium Crystal",
-            "equivalents": ["CaraMunich III", "Medium Crystal", "Dark Caramel"]
+            "equivalents": ["CaraMunich III", "Medium Crystal", "Dark Caramel"],
+            "flavorImpact": "Pronounced caramel flavor, amber to copper color",
+            "usage": "Backbone for amber ales, adds complexity and sweetness"
           },
           {
             "name": "Crystal 80L",
             "colorRange": { "min": 80.0, "max": 100.0 },
             "notes": "Dark Crystal, CaraMunich III",
-            "equivalents": ["Dark Crystal", "CaraMunich III"]
+            "equivalents": ["Dark Crystal", "CaraMunich III"],
+            "flavorImpact": "Rich caramel, slight raisin notes, deep amber color",
+            "usage": "Excellent for brown ales and porters, use sparingly"
           },
           {
             "name": "Crystal 120L",
             "colorRange": { "min": 110.0, "max": 140.0 },
             "notes": "CaraAroma, Special W, Dark Crystal",
-            "equivalents": ["CaraAroma", "Special W", "Dark Crystal II"]
+            "equivalents": ["CaraAroma", "Special W", "Dark Crystal II"],
+            "flavorImpact": "Dark fruit flavors, toffee, deep copper to brown color",
+            "usage": "Small amounts (5-10%) in dark beers for complexity"
           },
           {
             "name": "Crystal 150L+",
             "colorRange": { "min": 140.0, "max": 400.0 },
             "notes": "Very dark crystal malts",
-            "equivalents": ["Crystal Dark", "Extra Dark Crystal", "Crystal 240", "Crystal 400"]
+            "equivalents": ["Crystal Dark", "Extra Dark Crystal", "Crystal 240", "Crystal 400"],
+            "flavorImpact": "Intense dark fruit, molasses, burnt sugar notes",
+            "usage": "Use <5% for color and flavor complexity in dark beers"
           }
         ]
       }
@@ -171,17 +199,23 @@
           {
             "name": "Carafa II",
             "colorRange": { "min": 415.0, "max": 500.0 },
-            "notes": "Dehusked chocolate malt, less astringent"
+            "notes": "Dehusked chocolate malt, less astringent",
+            "flavorImpact": "Smooth chocolate flavor without harsh tannins",
+            "usage": "Premium choice for smooth dark flavor, 1:1 replacement"
           },
           {
             "name": "Pale Chocolate",
             "colorRange": { "min": 200.0, "max": 300.0 },
-            "notes": "Lighter chocolate flavor"
+            "notes": "Lighter chocolate flavor",
+            "flavorImpact": "Mild chocolate notes, brown color contribution",
+            "usage": "Use 20-30% more for similar flavor intensity"
           },
           {
             "name": "Roasted Barley",
             "colorRange": { "min": 300.0, "max": 600.0 },
-            "notes": "More roasted flavor, different character"
+            "notes": "More roasted flavor, different character",
+            "flavorImpact": "Coffee-like roasted flavor, distinctive stout character",
+            "usage": "Traditional for stouts, creates dry finish"
           }
         ]
       },

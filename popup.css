@@ -605,6 +605,29 @@ body {
     line-height: 1.4;
 }
 
+.substitution-advice {
+    margin-top: 8px;
+    padding: 8px;
+    background: var(--bg-color);
+    border-radius: 4px;
+    font-size: 11px;
+    border-left: 3px solid var(--accent-color);
+}
+
+.substitution-advice .flavor-impact {
+    margin-bottom: 4px;
+    color: var(--text-primary);
+}
+
+.substitution-advice .usage-advice {
+    color: var(--text-secondary);
+}
+
+.substitution-advice strong {
+    font-weight: 600;
+    color: var(--accent-color);
+}
+
 .apply-substitutions-btn {
     position: sticky;
     bottom: 0;
