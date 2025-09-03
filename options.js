@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 const elements = {
     themeSelect: document.getElementById('themeSelect'),
     languageSelect: document.getElementById('languageSelect'),
+    colorUnitSelect: document.getElementById('colorUnitSelect'),
     userId: document.getElementById('userId'),
     apiKey: document.getElementById('apiKey'),
     saveBtn: document.getElementById('saveBtn'),
@@ -24,6 +25,7 @@ const elements = {
 let originalSettings = {
     theme: null,
     language: null,
+    colorUnit: null,
     userId: '',
     apiKey: ''
 };
@@ -50,13 +52,14 @@ async function initializeOptions() {
 // Load existing settings
 async function loadSettings() {
     try {
-        const result = await chrome.storage.sync.get(['brewfatherUserId', 'brewfatherApiKey', 'theme', 'language']);
+        const result = await chrome.storage.sync.get(['brewfatherUserId', 'brewfatherApiKey', 'theme', 'language', 'colorUnit']);
         
         // Store original settings for reversion
         originalSettings.userId = result.brewfatherUserId || '';
         originalSettings.apiKey = result.brewfatherApiKey || '';
         originalSettings.theme = result.theme || 'system';
         originalSettings.language = result.language || 'system';
+        originalSettings.colorUnit = result.colorUnit || 'EBC';
         
         if (result.brewfatherUserId) {
             elements.userId.value = result.brewfatherUserId;
@@ -69,6 +72,7 @@ async function loadSettings() {
         // Set form values to saved settings (defaults to 'system' if not specified)
         elements.themeSelect.value = originalSettings.theme;
         elements.languageSelect.value = originalSettings.language;
+        elements.colorUnitSelect.value = originalSettings.colorUnit;
     } catch (error) {
         console.error('Error loading settings:', error);
         showStatus(i18n.t('settings.loadError'), 'error');
@@ -137,6 +141,7 @@ async function resetToSaved() {
         // Reset form values
         elements.themeSelect.value = originalSettings.theme;
         elements.languageSelect.value = originalSettings.language;
+        elements.colorUnitSelect.value = originalSettings.colorUnit;
         elements.userId.value = originalSettings.userId;
         elements.apiKey.value = originalSettings.apiKey;
         
@@ -221,6 +226,7 @@ function updateTestButtonState() {
 async function saveSettings() {
     const theme = elements.themeSelect.value;
     const language = elements.languageSelect.value;
+    const colorUnit = elements.colorUnitSelect.value;
     const userId = elements.userId.value.trim();
     const apiKey = elements.apiKey.value.trim();
     
@@ -247,6 +253,7 @@ async function saveSettings() {
         await chrome.storage.sync.set({
             theme: theme,
             language: language,
+            colorUnit: colorUnit,
             brewfatherUserId: userId,
             brewfatherApiKey: apiKey
         });
@@ -254,6 +261,7 @@ async function saveSettings() {
         // Now that language is saved, update the original settings
         originalSettings.theme = theme;
         originalSettings.language = language;
+        originalSettings.colorUnit = colorUnit;
         originalSettings.userId = userId;
         originalSettings.apiKey = apiKey;
         
@@ -436,7 +444,8 @@ function updateUITranslations() {
         // Update section headers
         updateTextContent('h2', 'settings.themeSection', 0); // First h2
         updateTextContent('h2', 'settings.languageSection', 1); // Second h2
-        updateTextContent('h2', 'settings.apiSection', 2); // Third h2
+        updateTextContent('h2', 'settings.colorUnitSection', 2); // Third h2
+        updateTextContent('h2', 'settings.apiSection', 3); // Fourth h2
         
         // Update theme section
         updateLabelText('themeSelect', 'settings.themeLabel');
@@ -457,6 +466,10 @@ function updateUITranslations() {
             'fr': 'Français'
         });
         updateHelpText('languageSelect', 'settings.languageHelp');
+        
+        // Update color unit section
+        updateLabelText('colorUnitSelect', 'settings.colorUnitLabel');
+        updateHelpText('colorUnitSelect', 'settings.colorUnitHelp');
         
         // Update API section
         updateLabelText('userId', 'settings.userIdLabel');

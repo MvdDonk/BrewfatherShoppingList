@@ -4,6 +4,37 @@
 const isStandalone = document.body.dataset.context === 'standalone' || 
                     (window.location.href.includes('standalone.html'));
 
+// Color conversion functions
+function convertColor(srm, targetUnit) {
+    if (!srm || isNaN(srm)) return srm;
+    
+    const srmValue = parseFloat(srm);
+    
+    switch (targetUnit) {
+        case 'SRM':
+            return srmValue.toFixed(1);
+        case 'EBC':
+            return (srmValue * 1.97).toFixed(1);
+        case 'Lovibond':
+            return ((srmValue + 0.76) / 1.3546).toFixed(1);
+        default:
+            return (srmValue * 1.97).toFixed(1); // Default to EBC
+    }
+}
+
+function getColorUnitSymbol(unit) {
+    switch (unit) {
+        case 'SRM':
+            return 'SRM';
+        case 'EBC':
+            return 'EBC';
+        case 'Lovibond':
+            return '°L';
+        default:
+            return 'EBC'; // Default to EBC
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialize translations first
     await i18n.init();
@@ -224,7 +255,7 @@ async function handleShoppingListUpdate(newShoppingList) {
         const substitutions = response.success ? response.data : [];
         
         // Update the display
-        displayShoppingList(newShoppingList, substitutions);
+        await displayShoppingList(newShoppingList, substitutions);
     }
     
     // Update substitution counts in all views
@@ -234,13 +265,13 @@ async function handleShoppingListUpdate(newShoppingList) {
 }
 
 // Handle substitutions updates from storage
-function handleSubstitutionsUpdate(newSubstitutions) {
+async function handleSubstitutionsUpdate(newSubstitutions) {
     // Update substitution counts
     updateSubstitutionCounts(newSubstitutions);
     
     // If we're in the substitutions view, refresh it
     if (elements.substitutionsView.style.display !== 'none') {
-        displaySubstitutionsInView(newSubstitutions);
+        await displaySubstitutionsInView(newSubstitutions);
     }
 }
 
@@ -341,7 +372,7 @@ async function loadShoppingList() {
         
         if (shoppingResponse.success) {
             const substitutions = substitutionsResponse.success ? substitutionsResponse.data : [];
-            displayShoppingList(shoppingResponse.data, substitutions);
+            await displayShoppingList(shoppingResponse.data, substitutions);
         } else {
             showError(shoppingResponse.error || 'Failed to load shopping list');
         }
@@ -365,7 +396,7 @@ function showError(message) {
 }
 
 // Display shopping list
-function displayShoppingList(ingredients, substitutions = []) {
+async function displayShoppingList(ingredients, substitutions = []) {
     hideAllStates();
     
     if (!ingredients || ingredients.length === 0) {
@@ -389,7 +420,7 @@ function displayShoppingList(ingredients, substitutions = []) {
     const groupOrder = ['fermentable', 'hop', 'yeast', 'other'];
     
     // Render each group in order
-    groupOrder.forEach(type => {
+    for (const type of groupOrder) {
         const items = groupedIngredients[type];
         if (items && items.length > 0) {
             // Sort items alphabetically by name
@@ -400,12 +431,12 @@ function displayShoppingList(ingredients, substitutions = []) {
             const groupHeader = createGroupHeader(type);
             elements.ingredientsList.appendChild(groupHeader);
             
-            sortedItems.forEach(ingredient => {
-                const item = createIngredientItem(ingredient);
+            for (const ingredient of sortedItems) {
+                const item = await createIngredientItem(ingredient);
                 elements.ingredientsList.appendChild(item);
-            });
+            }
         }
-    });
+    }
     
     elements.content.style.display = 'block';
 }
@@ -458,7 +489,7 @@ async function loadSubstitutions() {
                 elements.substitutionsEmptyState.style.display = 'block';
             } else {
                 // Display substitutions
-                displaySubstitutionsInView(substitutions);
+                await displaySubstitutionsInView(substitutions);
                 elements.substitutionsContent.style.display = 'block';
             }
         } else {
@@ -481,13 +512,13 @@ async function loadSubstitutions() {
 }
 
 // Display substitutions in the dedicated view
-function displaySubstitutionsInView(substitutions) {
+async function displaySubstitutionsInView(substitutions) {
     elements.substitutionsList.innerHTML = '';
     
-    substitutions.forEach(substitution => {
-        const substitutionItem = createSubstitutionItem(substitution);
+    for (const substitution of substitutions) {
+        const substitutionItem = await createSubstitutionItem(substitution);
         elements.substitutionsList.appendChild(substitutionItem);
-    });
+    }
     
     // Show apply button if there are substitutions
     elements.applySubstitutionsBtn.style.display = substitutions.length > 0 ? 'block' : 'none';
@@ -546,18 +577,33 @@ async function applyAllSelectedSubstitutions() {
 }
 
 // Display substitution suggestions
-function displaySubstitutions(substitutions) {
+async function displaySubstitutions(substitutions) {
     const substitutionsList = document.getElementById('substitutionsList');
     substitutionsList.innerHTML = '';
     
-    substitutions.forEach(substitution => {
-        const substitutionItem = createSubstitutionItem(substitution);
+    for (const substitution of substitutions) {
+        const substitutionItem = await createSubstitutionItem(substitution);
         substitutionsList.appendChild(substitutionItem);
-    });
+    }
+}
+
+// Helper function to format color for display
+async function formatColorForDisplay(color, type) {
+    if (!color || type !== 'fermentable') {
+        return '';
+    }
+    
+    // Get user's preferred color unit
+    const settings = await chrome.storage.sync.get(['colorUnit']);
+    const colorUnit = settings.colorUnit || 'EBC';
+    const convertedColor = convertColor(color, colorUnit);
+    const unitSymbol = getColorUnitSymbol(colorUnit);
+    
+    return `${i18n.t('common.color')}: ${convertedColor} ${unitSymbol}`;
 }
 
 // Create substitution item element
-function createSubstitutionItem(substitution) {
+async function createSubstitutionItem(substitution) {
     const item = document.createElement('div');
     item.className = 'substitution-item';
     item.dataset.substitutionId = substitution.id;
@@ -565,24 +611,32 @@ function createSubstitutionItem(substitution) {
     const categoryName = substitution.category || 'Unknown Category';
     const totalAmount = formatAmount(substitution.totalAmount, substitution.unit);
     
+    // Process ingredients with async color conversion
+    const ingredientOptions = [];
+    for (let index = 0; index < substitution.ingredients.length; index++) {
+        const ingredient = substitution.ingredients[index];
+        const colorDisplay = await formatColorForDisplay(ingredient.color, ingredient.type);
+        
+        ingredientOptions.push(`
+            <label class="substitution-option" data-ingredient-id="${ingredient.id}">
+                <input type="radio" name="substitution_${substitution.id}" value="${ingredient.id}" class="substitution-radio" ${index === 0 ? 'checked' : ''}>
+                <div class="substitution-ingredient">
+                    <div class="substitution-ingredient-name">${escapeHtml(ingredient.name)}</div>
+                    <div class="substitution-ingredient-details">
+                        ${formatAmount(ingredient.amount, ingredient.unit)}${colorDisplay ? ` • ${colorDisplay}` : ''} • 
+                        ${ingredient.origin || i18n.t('common.origin')}
+                        ${ingredient.recipeNames ? `<br>${i18n.t('substitutions.from', { recipes: ingredient.recipeNames.join(', ') })}` : ''}
+                    </div>
+                </div>
+            </label>
+        `);
+    }
+    
     item.innerHTML = `
         <div class="substitution-category">${categoryName}</div>
         <div class="substitution-total">${i18n.t('substitutions.totalNeeded', { amount: totalAmount })}</div>
         <div class="substitution-options" data-substitution-id="${substitution.id}">
-            ${substitution.ingredients.map((ingredient, index) => `
-                <label class="substitution-option" data-ingredient-id="${ingredient.id}">
-                    <input type="radio" name="substitution_${substitution.id}" value="${ingredient.id}" class="substitution-radio" ${index === 0 ? 'checked' : ''}>
-                    <div class="substitution-ingredient">
-                        <div class="substitution-ingredient-name">${escapeHtml(ingredient.name)}</div>
-                        <div class="substitution-ingredient-details">
-                            ${formatAmount(ingredient.amount, ingredient.unit)} • 
-                            ${i18n.t('common.color')}: ${ingredient.color} • 
-                            ${ingredient.origin || i18n.t('common.origin')}
-                            ${ingredient.recipeNames ? `<br>${i18n.t('substitutions.from', { recipes: ingredient.recipeNames.join(', ') })}` : ''}
-                        </div>
-                    </div>
-                </label>
-            `).join('')}
+            ${ingredientOptions.join('')}
         </div>
     `;
     
@@ -611,7 +665,7 @@ async function applySubstitution(substitutionId, chosenIngredientId) {
         
         if (response.success) {
             // Reload the shopping list with updated data
-            displayShoppingList(response.data.shoppingList, response.data.substitutions);
+            await displayShoppingList(response.data.shoppingList, response.data.substitutions);
         } else {
             console.error('Error applying substitution:', response.error);
             // Show user-friendly error message
@@ -635,7 +689,7 @@ window.dismissSubstitution = async function(substitutionId) {
             await chrome.storage.local.set({ ingredientSubstitutions: updatedSubstitutions });
             
             // Reload substitutions display
-            displaySubstitutions(updatedSubstitutions);
+            await displaySubstitutions(updatedSubstitutions);
             
             // Hide section if no more substitutions
             if (updatedSubstitutions.length === 0) {
@@ -685,12 +739,12 @@ function getTypeDisplayName(type) {
 }
 
 // Create ingredient item element
-function createIngredientItem(ingredient) {
+async function createIngredientItem(ingredient) {
     const item = document.createElement('div');
     item.className = 'ingredient-item';
     
     const amount = formatAmount(ingredient.amount, ingredient.unit);
-    const details = getIngredientDetails(ingredient);
+    const details = await getIngredientDetails(ingredient);
     const recipes = getRecipeInfo(ingredient);
     
     item.innerHTML = `
@@ -724,7 +778,7 @@ function formatAmount(amount, unit) {
 }
 
 // Get ingredient details string
-function getIngredientDetails(ingredient) {
+async function getIngredientDetails(ingredient) {
     const details = [];
     
     if (ingredient.origin) {
@@ -744,7 +798,12 @@ function getIngredientDetails(ingredient) {
     }
     
     if (ingredient.color && ingredient.type === 'fermentable') {
-        details.push(`${ingredient.color} EBC`);
+        // Get user's preferred color unit
+        const settings = await chrome.storage.sync.get(['colorUnit']);
+        const colorUnit = settings.colorUnit || 'EBC';
+        const convertedColor = convertColor(ingredient.color, colorUnit);
+        const unitSymbol = getColorUnitSymbol(colorUnit);
+        details.push(`${convertedColor} ${unitSymbol}`);
     }
     
     if (ingredient.hopType) {
@@ -1004,7 +1063,7 @@ async function removeIngredient(ingredientId) {
             const substitutions = substitutionsResponse.success ? substitutionsResponse.data : [];
             
             // Update the display with fresh data
-            displayShoppingList(response.data, substitutions);
+            await displayShoppingList(response.data, substitutions);
             
             // Update substitution counts
             updateSubstitutionCounts(substitutions);
